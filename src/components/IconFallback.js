@@ -1,0 +1,88 @@
+import React from 'react';
+import { Text } from 'react-native';
+
+
+const IconFallback = ({ name, size = 24, color = '#000', style = {} }) => {
+
+  const iconMap = {
+    'home': '🏠',
+    'add-circle': '➕',
+    'person': '👤',
+    'notifications': '🔔',
+    'search': '🔍',
+    'list': '📋',
+    'map': '🗺️',
+    'restaurant': '🍽️',
+    'email': '📧',
+    'lock': '🔒',
+    'phone': '📞',
+    'location-on': '📍',
+    'my-location': '🎯',
+    'event': '📅',
+    'schedule': '⏰',
+    'family-restroom': '👨‍👩‍👧‍👦',
+    'visibility': '👁️',
+    'visibility-off': '🙈',
+    'arrow-back': '←',
+    'check': '✓',
+    'edit': '✏️',
+    'share': '📤',
+    'flag': '🚩',
+    'shopping-cart': '🛒',
+    'check-circle': '✅',
+    'chat': '💬',
+    'logout': '🚪',
+    'language': '🌐',
+    'data-usage': '📊',
+    'history': '📜',
+    'arrow-forward-ios': '▶',
+    'info': 'ℹ️',
+    'account-balance': '🏛️',
+    'notifications-none': '🔕',
+    'error-outline': '⚠️',
+    'add-a-photo': '📷',
+    'favorite': '❤️',
+    'handshake': '🤝',
+    'volunteer-activism': '🤲',
+    'chevron-right': '▶',
+    'lock-outline': '🔒',
+    'email-outline': '📧',
+    'phone-outline': '📞',
+    'person-outline': '👤',
+    'location-on-outline': '📍',
+    'event-outline': '📅',
+    'schedule-outline': '⏰',
+    'family-restroom-outline': '👨‍👩‍👧‍👦',
+    'visibility-outline': '👁️',
+    'visibility-off-outline': '🙈',
+    'arrow-back-outline': '←',
+    'check-outline': '✓',
+    'edit-outline': '✏️',
+    'share-outline': '📤',
+    'flag-outline': '🚩',
+    'shopping-cart-outline': '🛒',
+    'check-circle-outline': '✅',
+    'chat-outline': '💬',
+    'logout-outline': '🚪',
+    'language-outline': '🌐',
+    'data-usage-outline': '📊',
+    'history-outline': '📜',
+    'arrow-forward-ios-outline': '▶',
+    'info-outline': 'ℹ️',
+    'account-balance-outline': '🏛️',
+    'notifications-none-outline': '🔕',
+    'error-outline-outline': '⚠️',
+    'add-a-photo-outline': '📷',
+    'favorite-outline': '❤️',
+    'handshake-outline': '🤝',
+    'volunteer-activism-outline': '🤲',
+  };
+
+  return (
+    <Text style={[{ fontSize: size, color }, style || {}]}>
+      {iconMap[name] || '❓'}
+    </Text>
+  );
+};
+
+export default IconFallback;

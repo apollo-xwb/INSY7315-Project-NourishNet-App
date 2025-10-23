@@ -1,0 +1,56 @@
+{
+  "expo": {
+    "name": "NourishNet",
+    "slug": "nourishnet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "nourishnet",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#2E7D32"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nourishnet.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#2E7D32"
+      },
+      "package": "com.nourishnet.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow NourishNet to use your location to show nearby donations."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow NourishNet to access your camera to take photos of donations."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow NourishNet to access your photos to upload donation images."
+        }
+      ],
+      "expo-font",
+      "expo-web-browser"
+    ]
+  }
+}
