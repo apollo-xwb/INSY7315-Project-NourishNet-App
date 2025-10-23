@@ -15,7 +15,6 @@ import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { mockNotifications } from '../mocks/data';
 import { submitSassaCheck, getCurrentSassaStatus } from '../services/sassaService';
 import { getUserAlerts, markAlertAsRead as markFirestoreAlertAsRead, deleteExpiredAlerts } from '../services/alertsService';
 
@@ -61,17 +60,13 @@ const AlertsScreen = ({ navigation }) => {
 
   const loadAlerts = async () => {
     if (!user) {
-      setNotifications(mockNotifications);
+      setNotifications([]);
       return;
     }
 
     try {
-
       await deleteExpiredAlerts(user.uid);
-
-
       const firestoreAlerts = await getUserAlerts(user.uid);
-
 
       const formattedAlerts = firestoreAlerts.map(alert => ({
         id: alert.id,
@@ -83,13 +78,10 @@ const AlertsScreen = ({ navigation }) => {
         donationId: alert.donationId,
       }));
 
-
-      const allNotifications = [...formattedAlerts, ...mockNotifications];
-      setNotifications(allNotifications);
+      setNotifications(formattedAlerts);
     } catch (error) {
       console.error('Error loading alerts:', error);
-
-      setNotifications(mockNotifications);
+      setNotifications([]);
     }
   };
 
@@ -112,14 +104,10 @@ const AlertsScreen = ({ navigation }) => {
 
 
     if (notification.donationId) {
-
       const { getDonations } = require('../services/donationService');
-      const { mockDonations } = require('../mocks/data');
       try {
         const firestoreDonations = await getDonations();
-
-        const allDonations = [...firestoreDonations, ...mockDonations];
-        const donation = allDonations.find(d => d.id === notification.donationId);
+        const donation = firestoreDonations.find(d => d.id === notification.donationId);
 
         if (donation) {
           navigation.navigate('DonationDetails', { donation });

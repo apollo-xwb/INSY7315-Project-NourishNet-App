@@ -15,7 +15,7 @@ import Icon from '../utils/IconWrapper';
 import MapComponent from '../components/MapComponent';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { mockDonations, mockCategories } from '../mocks/data';
+import { mockCategories } from '../mocks/data';
 import { getDonations as getFirestoreDonations } from '../services/donationService';
 
 const { width, height } = Dimensions.get('window');
@@ -44,15 +44,11 @@ const HomeScreen = ({ navigation }) => {
 
   const loadDonations = async () => {
     try {
-
       const firestoreDonations = await getFirestoreDonations();
-
-      const allDonations = [...firestoreDonations, ...mockDonations];
-      setDonations(allDonations);
+      setDonations(firestoreDonations);
     } catch (error) {
       console.error('Error loading donations:', error);
-
-      setDonations(mockDonations);
+      setDonations([]);
     }
   };
 
