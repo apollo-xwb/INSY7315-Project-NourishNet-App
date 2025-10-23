@@ -1,10 +1,15 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  CACHE_SIZE_UNLIMITED,
+  persistentLocalCache,
+  persistentMultipleTabManager
+} from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-
 
 const firebaseConfig = {
   apiKey: "AIzaSyBFzJXSF8YwnnXjEBjw7NxDOLL7w4JxXjA",
@@ -16,11 +21,7 @@ const firebaseConfig = {
   measurementId: "G-209E40JXX7"
 };
 
-
 const app = initializeApp(firebaseConfig);
-
-
-
 
 let auth;
 if (Platform.OS === 'web') {
@@ -31,9 +32,20 @@ if (Platform.OS === 'web') {
   });
 }
 
-
-const db = getFirestore(app);
-
+let db;
+if (Platform.OS === 'web') {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+} else {
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED
+    })
+  });
+}
 
 const storage = getStorage(app);
 
