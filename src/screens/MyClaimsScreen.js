@@ -16,24 +16,35 @@ import QRCode from 'react-native-qrcode-svg';
 import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { getClaims, updateClaimStatus, deleteClaim } from '../utils/claimsStorage';
+import { useAuth } from '../contexts/AuthContext';
+import { getUserClaims } from '../services/firestoreService';
 
 const MyClaimsScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [claims, setClaims] = useState([]);
   const [selectedClaim, setSelectedClaim] = useState(null);
   const [qrModalVisible, setQrModalVisible] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
-      loadClaims();
-    }, [])
+      if (user) {
+        loadClaims();
+      }
+    }, [user])
   );
 
   const loadClaims = async () => {
-    const loadedClaims = await getClaims();
-    setClaims(loadedClaims);
+    if (!user) return;
+    try {
+      const result = await getUserClaims(user.uid);
+      if (result.success) {
+        setClaims(result.data);
+      }
+    } catch (error) {
+      console.error('Error loading claims:', error);
+    }
   };
 
   const handleViewQR = (claim) => {
@@ -50,8 +61,7 @@ const MyClaimsScreen = ({ navigation }) => {
         {
           text: 'Yes, Picked Up',
           onPress: async () => {
-            await updateClaimStatus(claim.id, 'picked_up');
-            loadClaims();
+            Alert.alert('Feature Coming Soon', 'Claim status updates will be implemented with Firestore.');
           },
         },
       ]
@@ -68,8 +78,7 @@ const MyClaimsScreen = ({ navigation }) => {
           text: 'Yes, Cancel',
           style: 'destructive',
           onPress: async () => {
-            await deleteClaim(claim.id);
-            loadClaims();
+            Alert.alert('Feature Coming Soon', 'Claim cancellation will be implemented with Firestore.');
           },
         },
       ]
