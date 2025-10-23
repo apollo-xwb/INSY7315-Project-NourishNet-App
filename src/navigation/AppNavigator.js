@@ -7,6 +7,8 @@ import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import logger from '../utils/logger';
+
 
 
 import SplashScreen from '../screens/SplashScreen';
@@ -126,7 +128,7 @@ const AppNavigator = () => {
         setIsFirstLaunch(false);
       }
     } catch (error) {
-      console.error('Error checking first launch:', error);
+      logger.error('Error checking first launch:', error);
       setIsFirstLaunch(false);
     } finally {
       setCheckingFirstLaunch(false);

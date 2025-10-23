@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import {
+import logger from '../utils/logger';
+
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
@@ -39,7 +41,7 @@ export const AuthProvider = ({ children }) => {
     useProxy: true,
   });
 
-  console.log('Google Auth Redirect URI:', redirectUri);
+  logger.log('Google Auth Redirect URI:', redirectUri);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     iosClientId: '834728778135-utaqgdlojjbvvbao6l6pts8lsa1dccsa.apps.googleusercontent.com',
@@ -74,7 +76,7 @@ export const AuthProvider = ({ children }) => {
         setUserProfile(userDoc.data());
       }
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      logger.error('Error loading user profile:', error);
     }
   };
 
@@ -115,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true, user: firebaseUser };
     } catch (error) {
-      console.error('Signup error:', error);
+      logger.error('Signup error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
@@ -128,7 +130,7 @@ export const AuthProvider = ({ children }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       return { success: true, user: userCredential.user };
     } catch (error) {
-      console.error('Signin error:', error);
+      logger.error('Signin error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
@@ -143,7 +145,7 @@ export const AuthProvider = ({ children }) => {
       setUserProfile(null);
       return { success: true };
     } catch (error) {
-      console.error('Logout error:', error);
+      logger.error('Logout error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
@@ -170,7 +172,7 @@ export const AuthProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      console.error('Update profile error:', error);
+      logger.error('Update profile error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }
@@ -217,7 +219,7 @@ export const AuthProvider = ({ children }) => {
             await setDoc(doc(db, 'users', firebaseUser.uid), userProfileData);
           }
         } catch (error) {
-          console.error('Google sign-in error:', error);
+          logger.error('Google sign-in error:', error);
           setError(error.message);
         }
       };
@@ -233,7 +235,7 @@ export const AuthProvider = ({ children }) => {
       const result = await promptAsync();
       return { success: result.type === 'success' };
     } catch (error) {
-      console.error('Google sign-in error:', error);
+      logger.error('Google sign-in error:', error);
       setError(error.message);
       return { success: false, error: error.message };
     }

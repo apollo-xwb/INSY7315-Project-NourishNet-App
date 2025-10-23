@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -58,7 +60,7 @@ const OnboardingScreen = ({ navigation }) => {
         window.location.reload();
       }
     } catch (error) {
-      console.error('Error saving first launch:', error);
+      logger.error('Error saving first launch:', error);
     }
   };
 

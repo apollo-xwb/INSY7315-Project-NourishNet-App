@@ -1,4 +1,6 @@
 import {
+import logger from '../utils/logger';
+
   doc,
   getDoc,
   setDoc,
@@ -52,7 +54,7 @@ export const getUserSettings = async (userId) => {
       return DEFAULT_SETTINGS;
     }
   } catch (error) {
-    console.error('Error getting user settings:', error);
+    logger.error('Error getting user settings:', error);
     return DEFAULT_SETTINGS;
   }
 };
@@ -81,7 +83,7 @@ export const updateUserSettings = async (userId, settings) => {
 
     return await getUserSettings(userId);
   } catch (error) {
-    console.error('Error updating user settings:', error);
+    logger.error('Error updating user settings:', error);
     throw error;
   }
 };
@@ -93,7 +95,7 @@ export const updateNotificationSettings = async (userId, notificationSettings) =
       notifications: notificationSettings,
     });
   } catch (error) {
-    console.error('Error updating notification settings:', error);
+    logger.error('Error updating notification settings:', error);
     throw error;
   }
 };
@@ -109,7 +111,7 @@ export const updateThemePreference = async (userId, theme) => {
       },
     });
   } catch (error) {
-    console.error('Error updating theme preference:', error);
+    logger.error('Error updating theme preference:', error);
     throw error;
   }
 };
@@ -125,7 +127,7 @@ export const updateLanguagePreference = async (userId, language) => {
       },
     });
   } catch (error) {
-    console.error('Error updating language preference:', error);
+    logger.error('Error updating language preference:', error);
     throw error;
   }
 };
@@ -137,7 +139,7 @@ export const updatePrivacySettings = async (userId, privacySettings) => {
       privacy: privacySettings,
     });
   } catch (error) {
-    console.error('Error updating privacy settings:', error);
+    logger.error('Error updating privacy settings:', error);
     throw error;
   }
 };
@@ -149,7 +151,7 @@ export const resetSettings = async (userId) => {
     await setDoc(settingsRef, DEFAULT_SETTINGS);
     return DEFAULT_SETTINGS;
   } catch (error) {
-    console.error('Error resetting settings:', error);
+    logger.error('Error resetting settings:', error);
     throw error;
   }
 };
@@ -165,7 +167,7 @@ export const toggleLowDataMode = async (userId, enabled) => {
       },
     });
   } catch (error) {
-    console.error('Error toggling low data mode:', error);
+    logger.error('Error toggling low data mode:', error);
     throw error;
   }
 };

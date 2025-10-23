@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -46,7 +48,7 @@ const DonationHistoryScreen = ({ navigation }) => {
       setMyDonations(donations);
       setMyClaims(claims);
     } catch (error) {
-      console.error('Error loading history:', error);
+      logger.error('Error loading history:', error);
       Alert.alert('Error', 'Failed to load donation history.');
     }
   };
@@ -65,7 +67,7 @@ const DonationHistoryScreen = ({ navigation }) => {
               await deleteFirestoreDonation(donation.id);
               loadHistory();
             } catch (error) {
-              console.error('Error deleting donation:', error);
+              logger.error('Error deleting donation:', error);
               Alert.alert('Error', 'Failed to delete donation.');
             }
           },

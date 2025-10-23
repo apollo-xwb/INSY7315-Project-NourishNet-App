@@ -1,34 +1,36 @@
+import logger from '../utils/logger';
+
 const isDevelopment = __DEV__;
 
 export const logger = {
   log: (...args) => {
     if (isDevelopment) {
-      console.log(...args);
+      logger.log(...args);
     }
   },
   
   warn: (...args) => {
     if (isDevelopment) {
-      console.warn(...args);
+      logger.warn(...args);
     }
   },
   
   error: (...args) => {
     if (isDevelopment) {
-      console.error(...args);
+      logger.error(...args);
     } else {
     }
   },
   
   info: (...args) => {
     if (isDevelopment) {
-      console.info(...args);
+      logger.info(...args);
     }
   },
   
   debug: (...args) => {
     if (isDevelopment) {
-      console.debug(...args);
+      logger.debug(...args);
     }
   }
 };

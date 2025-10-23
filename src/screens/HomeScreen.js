@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -47,7 +49,7 @@ const HomeScreen = ({ navigation }) => {
       const firestoreDonations = await getFirestoreDonations();
       setDonations(firestoreDonations);
     } catch (error) {
-      console.error('Error loading donations:', error);
+      logger.error('Error loading donations:', error);
       setDonations([]);
     }
   };

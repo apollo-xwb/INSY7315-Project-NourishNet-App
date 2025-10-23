@@ -1,4 +1,6 @@
 import {
+import logger from '../utils/logger';
+
   collection,
   addDoc,
   getDocs,
@@ -32,7 +34,7 @@ export const uploadDonationImage = async (uri, donationId) => {
     const downloadURL = await getDownloadURL(storageRef);
     return downloadURL;
   } catch (error) {
-    console.error('Error uploading image:', error);
+    logger.error('Error uploading image:', error);
     throw error;
   }
 };
@@ -67,7 +69,7 @@ export const createDonation = async (donationData, userId) => {
       ...donation,
     };
   } catch (error) {
-    console.error('Error creating donation:', error);
+    logger.error('Error creating donation:', error);
     throw error;
   }
 };
@@ -97,7 +99,7 @@ export const getDonations = async () => {
 
     return donations;
   } catch (error) {
-    console.error('Error getting donations:', error);
+    logger.error('Error getting donations:', error);
     throw error;
   }
 };
@@ -126,7 +128,7 @@ export const getUserDonations = async (userId) => {
 
     return donations;
   } catch (error) {
-    console.error('Error getting user donations:', error);
+    logger.error('Error getting user donations:', error);
     throw error;
   }
 };
@@ -149,7 +151,7 @@ export const getDonationById = async (donationId) => {
       throw new Error('Donation not found');
     }
   } catch (error) {
-    console.error('Error getting donation:', error);
+    logger.error('Error getting donation:', error);
     throw error;
   }
 };
@@ -170,7 +172,7 @@ export const updateDonationStatus = async (donationId, status, claimedBy = null)
 
     await updateDoc(docRef, updateData);
   } catch (error) {
-    console.error('Error updating donation status:', error);
+    logger.error('Error updating donation status:', error);
     throw error;
   }
 };
@@ -181,7 +183,7 @@ export const deleteDonation = async (donationId) => {
     const docRef = doc(db, 'donations', donationId);
     await deleteDoc(docRef);
   } catch (error) {
-    console.error('Error deleting donation:', error);
+    logger.error('Error deleting donation:', error);
     throw error;
   }
 };
@@ -211,7 +213,7 @@ export const getClaimedDonations = async (userId) => {
 
     return donations;
   } catch (error) {
-    console.error('Error getting claimed donations:', error);
+    logger.error('Error getting claimed donations:', error);
     throw error;
   }
 };

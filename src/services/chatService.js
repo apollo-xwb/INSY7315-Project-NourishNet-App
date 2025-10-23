@@ -1,4 +1,6 @@
 import {
+import logger from '../utils/logger';
+
   collection,
   addDoc,
   getDocs,
@@ -29,7 +31,7 @@ export const sendMessage = async (chatId, messageData) => {
       ...message,
     };
   } catch (error) {
-    console.error('Error sending message:', error);
+    logger.error('Error sending message:', error);
     throw error;
   }
 };
@@ -56,7 +58,7 @@ export const getChatMessages = async (chatId) => {
 
     return messages;
   } catch (error) {
-    console.error('Error getting messages:', error);
+    logger.error('Error getting messages:', error);
     throw error;
   }
 };
@@ -84,7 +86,7 @@ export const subscribeToMessages = (chatId, callback) => {
 
     return unsubscribe;
   } catch (error) {
-    console.error('Error subscribing to messages:', error);
+    logger.error('Error subscribing to messages:', error);
     throw error;
   }
 };
@@ -141,7 +143,7 @@ export const getUserChats = async (userId) => {
 
     return Array.from(chatMap.values());
   } catch (error) {
-    console.error('Error getting user chats:', error);
+    logger.error('Error getting user chats:', error);
     throw error;
   }
 };
@@ -166,7 +168,7 @@ export const markMessagesAsRead = async (chatId, userId) => {
 
     await Promise.all(updatePromises);
   } catch (error) {
-    console.error('Error marking messages as read:', error);
+    logger.error('Error marking messages as read:', error);
     throw error;
   }
 };

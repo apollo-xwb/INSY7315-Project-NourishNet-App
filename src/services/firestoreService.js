@@ -1,4 +1,6 @@
 import {
+import logger from '../utils/logger';
+
   collection,
   doc,
   getDoc,
@@ -36,7 +38,7 @@ export const createDonation = async (donationData, userId) => {
     const docRef = await addDoc(donationRef, donation);
     return { success: true, id: docRef.id };
   } catch (error) {
-    console.error('Error creating donation:', error);
+    logger.error('Error creating donation:', error);
     return { success: false, error: error.message };
   }
 };
@@ -82,7 +84,7 @@ export const getDonations = async (filters = {}) => {
 
     return { success: true, data: donations };
   } catch (error) {
-    console.error('Error getting donations:', error);
+    logger.error('Error getting donations:', error);
     return { success: false, error: error.message, data: [] };
   }
 };
@@ -106,7 +108,7 @@ export const getDonationById = async (donationId) => {
       return { success: false, error: 'Donation not found' };
     }
   } catch (error) {
-    console.error('Error getting donation:', error);
+    logger.error('Error getting donation:', error);
     return { success: false, error: error.message };
   }
 };
@@ -121,7 +123,7 @@ export const updateDonation = async (donationId, updates) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating donation:', error);
+    logger.error('Error updating donation:', error);
     return { success: false, error: error.message };
   }
 };
@@ -131,7 +133,7 @@ export const deleteDonation = async (donationId) => {
     await deleteDoc(doc(db, 'donations', donationId));
     return { success: true };
   } catch (error) {
-    console.error('Error deleting donation:', error);
+    logger.error('Error deleting donation:', error);
     return { success: false, error: error.message };
   }
 };
@@ -158,7 +160,7 @@ export const claimDonation = async (donationId, userId, claimData) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Error claiming donation:', error);
+    logger.error('Error claiming donation:', error);
     return { success: false, error: error.message };
   }
 };
@@ -190,7 +192,7 @@ export const getUserDonations = async (userId) => {
 
     return { success: true, data: donations };
   } catch (error) {
-    console.error('Error getting user donations:', error);
+    logger.error('Error getting user donations:', error);
     return { success: false, error: error.message, data: [] };
   }
 };
@@ -220,7 +222,7 @@ export const getUserClaims = async (userId) => {
 
     return { success: true, data: claims };
   } catch (error) {
-    console.error('Error getting user claims:', error);
+    logger.error('Error getting user claims:', error);
     return { success: false, error: error.message, data: [] };
   }
 };
@@ -261,7 +263,7 @@ export const subscribeToDonations = (callback, filters = {}) => {
     });
     callback(donations);
   }, (error) => {
-    console.error('Error in donations listener:', error);
+    logger.error('Error in donations listener:', error);
   });
 };
 

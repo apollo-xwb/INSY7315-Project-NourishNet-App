@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
+import logger from '../utils/logger';
+
 
 const ThemeContext = createContext();
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    console.error('useTheme must be used within a ThemeProvider');
+    logger.error('useTheme must be used within a ThemeProvider');
 
     return {
       theme: {

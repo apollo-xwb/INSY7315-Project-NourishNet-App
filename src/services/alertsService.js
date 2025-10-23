@@ -1,4 +1,6 @@
 import {
+import logger from '../utils/logger';
+
   collection,
   addDoc,
   getDocs,
@@ -37,7 +39,7 @@ export const createAlert = async (userId, alertData) => {
       expiresAt: alert.expiresAt.toDate(),
     };
   } catch (error) {
-    console.error('Error creating alert:', error);
+    logger.error('Error creating alert:', error);
     throw error;
   }
 };
@@ -86,7 +88,7 @@ export const getUserAlerts = async (userId, includeRead = true) => {
 
     return alerts;
   } catch (error) {
-    console.error('Error getting user alerts:', error);
+    logger.error('Error getting user alerts:', error);
     throw error;
   }
 };
@@ -115,7 +117,7 @@ export const getUnreadAlertCount = async (userId) => {
 
     return count;
   } catch (error) {
-    console.error('Error getting unread alert count:', error);
+    logger.error('Error getting unread alert count:', error);
     return 0;
   }
 };
@@ -128,7 +130,7 @@ export const markAlertAsRead = async (alertId) => {
       read: true,
     });
   } catch (error) {
-    console.error('Error marking alert as read:', error);
+    logger.error('Error marking alert as read:', error);
     throw error;
   }
 };
@@ -152,7 +154,7 @@ export const markAllAlertsAsRead = async (userId) => {
 
     await Promise.all(updatePromises);
   } catch (error) {
-    console.error('Error marking all alerts as read:', error);
+    logger.error('Error marking all alerts as read:', error);
     throw error;
   }
 };
@@ -162,7 +164,7 @@ export const deleteAlert = async (alertId) => {
   try {
     await deleteDoc(doc(db, 'alerts', alertId));
   } catch (error) {
-    console.error('Error deleting alert:', error);
+    logger.error('Error deleting alert:', error);
     throw error;
   }
 };
@@ -189,7 +191,7 @@ export const deleteExpiredAlerts = async (userId) => {
     await Promise.all(deletePromises);
     return deletePromises.length;
   } catch (error) {
-    console.error('Error deleting expired alerts:', error);
+    logger.error('Error deleting expired alerts:', error);
     return 0;
   }
 };
@@ -208,7 +210,7 @@ export const notifyNearbyUsers = async (donation, nearbyUserIds) => {
 
     return await Promise.all(alertPromises);
   } catch (error) {
-    console.error('Error notifying nearby users:', error);
+    logger.error('Error notifying nearby users:', error);
     throw error;
   }
 };

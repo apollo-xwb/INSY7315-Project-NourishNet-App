@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   TextInput,
@@ -50,7 +52,7 @@ const CompleteProfileScreen = ({ navigation }) => {
         );
       }
     } catch (error) {
-      console.error('Error requesting location permission:', error);
+      logger.error('Error requesting location permission:', error);
     }
   };
 
@@ -72,7 +74,7 @@ const CompleteProfileScreen = ({ navigation }) => {
         setLocation(formattedAddress);
       }
     } catch (error) {
-      console.error('Error getting location:', error);
+      logger.error('Error getting location:', error);
       Alert.alert('Error', 'Could not get your current location. Please enter it manually.');
     } finally {
       setIsLoading(false);
@@ -126,7 +128,7 @@ const CompleteProfileScreen = ({ navigation }) => {
         Alert.alert('Error', result.error || 'Failed to update profile');
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', error);
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
       setIsLoading(false);

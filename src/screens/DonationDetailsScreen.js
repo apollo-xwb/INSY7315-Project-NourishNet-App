@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -76,7 +78,7 @@ const DonationDetailsScreen = ({ route, navigation }) => {
                   donationId: donation.id,
                 });
               } catch (alertError) {
-                console.error('Error creating claim alert:', alertError);
+                logger.error('Error creating claim alert:', alertError);
               }
 
 
@@ -89,7 +91,7 @@ const DonationDetailsScreen = ({ route, navigation }) => {
                     donationId: donation.id,
                   });
                 } catch (alertError) {
-                  console.error('Error creating donor alert:', alertError);
+                  logger.error('Error creating donor alert:', alertError);
                 }
               }
 
@@ -99,7 +101,7 @@ const DonationDetailsScreen = ({ route, navigation }) => {
                 [{ text: 'OK' }]
               );
             } catch (error) {
-              console.error('Error claiming donation:', error);
+              logger.error('Error claiming donation:', error);
               Alert.alert(
                 'Error',
                 'Failed to claim donation. Please try again.',
@@ -127,7 +129,7 @@ const DonationDetailsScreen = ({ route, navigation }) => {
         title: 'NourishNet Donation',
       });
     } catch (error) {
-      console.error('Error sharing:', error);
+      logger.error('Error sharing:', error);
     }
   };
 

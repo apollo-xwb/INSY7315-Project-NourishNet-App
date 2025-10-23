@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -175,7 +177,7 @@ const PostDonationScreen = ({ navigation }) => {
 
       const savedDonation = await createDonation(donationData, user.uid);
 
-      console.log('Donation created in Firestore:', savedDonation.id);
+      logger.log('Donation created in Firestore:', savedDonation.id);
 
 
       try {
@@ -186,7 +188,7 @@ const PostDonationScreen = ({ navigation }) => {
           donationId: savedDonation.id,
         });
       } catch (alertError) {
-        console.error('Error creating alert:', alertError);
+        logger.error('Error creating alert:', alertError);
 
       }
 
@@ -216,7 +218,7 @@ const PostDonationScreen = ({ navigation }) => {
         ]
       );
     } catch (error) {
-      console.error('Error posting donation:', error);
+      logger.error('Error posting donation:', error);
       Alert.alert(t('error'), 'Failed to post donation. Please try again.');
     } finally {
       setIsLoading(false);

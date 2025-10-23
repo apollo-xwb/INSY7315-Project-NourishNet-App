@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -83,7 +85,7 @@ const ChatsListScreen = ({ navigation }) => {
 
       setChats(loadedChats);
     } catch (error) {
-      console.error('Error loading chats:', error);
+      logger.error('Error loading chats:', error);
     }
   };
 

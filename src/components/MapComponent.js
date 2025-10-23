@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../utils/IconWrapper';
+import logger from '../utils/logger';
+
 
 
 const MapComponent = ({ region, markers, style, onRegionChangeComplete, onMarkerPress, onLongPress }) => {
@@ -73,7 +75,7 @@ const MapComponent = ({ region, markers, style, onRegionChangeComplete, onMarker
     );
   } catch (error) {
 
-    console.warn('Native maps failed to load, using fallback:', error);
+    logger.warn('Native maps failed to load, using fallback:', error);
     return <WebFallback />;
   }
 };

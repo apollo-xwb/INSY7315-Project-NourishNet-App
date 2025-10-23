@@ -1,4 +1,6 @@
 import {
+import logger from '../utils/logger';
+
   collection,
   addDoc,
   getDocs,
@@ -40,7 +42,7 @@ export const submitSassaCheck = async (userId, applicationData) => {
       expiresAt: application.expiresAt.toDate(),
     };
   } catch (error) {
-    console.error('Error submitting SASSA check:', error);
+    logger.error('Error submitting SASSA check:', error);
     throw error;
   }
 };
@@ -68,7 +70,7 @@ export const getUserSassaApplications = async (userId) => {
 
     return applications;
   } catch (error) {
-    console.error('Error getting SASSA applications:', error);
+    logger.error('Error getting SASSA applications:', error);
     throw error;
   }
 };
@@ -104,7 +106,7 @@ export const getCurrentSassaStatus = async (userId) => {
       isExpired,
     };
   } catch (error) {
-    console.error('Error getting current SASSA status:', error);
+    logger.error('Error getting current SASSA status:', error);
     throw error;
   }
 };

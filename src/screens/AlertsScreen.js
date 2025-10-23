@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -52,7 +54,7 @@ const AlertsScreen = ({ navigation }) => {
       const status = await getCurrentSassaStatus(user.uid);
       setCurrentSassaStatus(status);
     } catch (error) {
-      console.error('Error loading SASSA status:', error);
+      logger.error('Error loading SASSA status:', error);
     } finally {
       setIsLoadingSassa(false);
     }
@@ -80,7 +82,7 @@ const AlertsScreen = ({ navigation }) => {
 
       setNotifications(formattedAlerts);
     } catch (error) {
-      console.error('Error loading alerts:', error);
+      logger.error('Error loading alerts:', error);
       setNotifications([]);
     }
   };
@@ -98,7 +100,7 @@ const AlertsScreen = ({ navigation }) => {
       try {
         await markFirestoreAlertAsRead(notification.id);
       } catch (error) {
-        console.error('Error marking alert as read:', error);
+        logger.error('Error marking alert as read:', error);
       }
     }
 
@@ -115,7 +117,7 @@ const AlertsScreen = ({ navigation }) => {
           Alert.alert('Not Found', 'This donation is no longer available.');
         }
       } catch (error) {
-        console.error('Error loading donation:', error);
+        logger.error('Error loading donation:', error);
         Alert.alert('Error', 'Could not load donation details.');
       }
     }
@@ -180,7 +182,7 @@ const AlertsScreen = ({ navigation }) => {
         ]
       );
     } catch (error) {
-      console.error('Error submitting SASSA check:', error);
+      logger.error('Error submitting SASSA check:', error);
       Alert.alert('Error', 'Failed to submit eligibility check. Please try again.');
     } finally {
       setIsSubmittingSassa(false);

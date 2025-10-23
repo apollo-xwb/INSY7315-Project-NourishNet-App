@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
+import logger from '../utils/logger';
+
   View,
   Text,
   StyleSheet,
@@ -108,7 +110,7 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
       Alert.alert('Success', 'Current location detected!');
       setIsLoadingGPS(false);
     } catch (error) {
-      console.error('GPS Error:', error);
+      logger.error('GPS Error:', error);
       Alert.alert(
         'GPS Error',
         'Could not retrieve your location. Please ensure GPS is enabled or select location manually.',

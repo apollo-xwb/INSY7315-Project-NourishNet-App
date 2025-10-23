@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import logger from '../utils/logger';
+
 
 const QUEUE_KEY = '@nourishnet_offline_queue';
 
@@ -18,10 +20,10 @@ export const queueOfflineOperation = async (type, data) => {
     queue.push(operation);
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
 
-    console.log('Queued offline operation:', type);
+    logger.log('Queued offline operation:', type);
     return { success: true, queueId: operation.id };
   } catch (error) {
-    console.error('Error queuing operation:', error);
+    logger.error('Error queuing operation:', error);
     return { success: false, error: error.message };
   }
 };
@@ -31,7 +33,7 @@ export const getQueue = async () => {
     const queueJson = await AsyncStorage.getItem(QUEUE_KEY);
     return queueJson ? JSON.parse(queueJson) : [];
   } catch (error) {
-    console.error('Error getting queue:', error);
+    logger.error('Error getting queue:', error);
     return [];
   }
 };
@@ -59,19 +61,19 @@ export const processQueue = async () => {
             result = await claimDonation(operation.data.donationId, operation.data.userId, operation.data.claimData);
             break;
           default:
-            console.warn('Unknown operation type:', operation.type);
+            logger.warn('Unknown operation type:', operation.type);
         }
 
         if (result?.success || result?.id) {
           processed++;
-          console.log('Processed queued operation:', operation.type);
+          logger.log('Processed queued operation:', operation.type);
         } else {
           operation.retries += 1;
           operation.status = operation.retries > 3 ? 'failed' : 'pending';
           updatedQueue.push(operation);
         }
       } catch (error) {
-        console.error('Error processing operation:', error);
+        logger.error('Error processing operation:', error);
         operation.retries += 1;
         operation.status = operation.retries > 3 ? 'failed' : 'pending';
         updatedQueue.push(operation);
@@ -81,7 +83,7 @@ export const processQueue = async () => {
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(updatedQueue));
     return { success: true, processed, remaining: updatedQueue.length };
   } catch (error) {
-    console.error('Error processing queue:', error);
+    logger.error('Error processing queue:', error);
     return { success: false, error: error.message };
   }
 };
@@ -89,7 +91,7 @@ export const processQueue = async () => {
 export const initializeOfflineSync = () => {
   NetInfo.addEventListener(state => {
     if (state.isConnected && state.isInternetReachable) {
-      console.log('Network restored, processing offline queue...');
+      logger.log('Network restored, processing offline queue...');
       processQueue();
     }
   });
