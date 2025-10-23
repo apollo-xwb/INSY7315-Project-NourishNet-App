@@ -15,7 +15,7 @@ import Icon from '../utils/IconWrapper';
 import MapComponent from '../components/MapComponent';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
-import { mockCategories } from '../mocks/data';
+import { DONATION_CATEGORIES } from '../constants/categories';
 import { getDonations as getFirestoreDonations } from '../services/donationService';
 
 const { width, height } = Dimensions.get('window');
@@ -173,7 +173,7 @@ const HomeScreen = ({ navigation }) => {
 
   const getMapMarkers = () => {
     return filteredDonations.map(donation => {
-      const categoryIcon = mockCategories.find(cat => cat.id === donation.category)?.icon || '📦';
+      const categoryIcon = DONATION_CATEGORIES.find(cat => cat.value === donation.category)?.icon || 'category';
 
       return {
         donation: donation,
@@ -244,34 +244,34 @@ const HomeScreen = ({ navigation }) => {
 
         {}
         <FlatList
-          data={[{ id: 'all', name: 'All' }, ...mockCategories]}
+          data={[{ value: 'all', label: 'all' }, ...DONATION_CATEGORIES]}
           horizontal
           showsHorizontalScrollIndicator={false}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.value}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[
                 styles.categoryButton,
                 {
-                  backgroundColor: selectedCategory === item.id
+                  backgroundColor: selectedCategory === item.value
                     ? theme.colors.surface
                     : 'transparent',
                   borderColor: theme.colors.surface,
                 },
               ]}
-              onPress={() => setSelectedCategory(item.id)}
+              onPress={() => setSelectedCategory(item.value)}
             >
               <Text
                 style={[
                   styles.categoryButtonText,
                   {
-                    color: selectedCategory === item.id
+                    color: selectedCategory === item.value
                       ? theme.colors.primary
                       : theme.colors.surface,
                   },
                 ]}
               >
-                {item.icon} {item.name}
+                {t(item.label)}
               </Text>
             </TouchableOpacity>
           )}

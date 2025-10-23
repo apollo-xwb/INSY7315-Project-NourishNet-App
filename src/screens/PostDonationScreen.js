@@ -17,7 +17,7 @@ import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { mockCategories } from '../mocks/data';
+import { DONATION_CATEGORIES } from '../constants/categories';
 import { createDonation } from '../services/donationService';
 import { createAlert } from '../services/alertsService';
 
@@ -285,32 +285,32 @@ const PostDonationScreen = ({ navigation }) => {
               Category
             </Text>
             <View style={[styles.categoryGrid]}>
-              {mockCategories.map((category) => (
+              {DONATION_CATEGORIES.map((category) => (
                 <TouchableOpacity
-                  key={category.id}
+                  key={category.value}
                   style={[
                     styles.categoryOption,
                     {
-                      backgroundColor: formData.category === category.id
+                      backgroundColor: formData.category === category.value
                         ? theme.colors.primary
                         : theme.colors.background,
                       borderColor: theme.colors.border,
                     },
                   ]}
-                  onPress={() => handleInputChange('category', category.id)}
+                  onPress={() => handleInputChange('category', category.value)}
                 >
-                  <Text style={styles.categoryIcon}>{category.icon}</Text>
+                  <Icon name={category.icon} size={24} color={formData.category === category.value ? theme.colors.surface : theme.colors.text} />
                   <Text
                     style={[
                       styles.categoryText,
                       {
-                        color: formData.category === category.id
+                        color: formData.category === category.value
                           ? theme.colors.surface
                           : theme.colors.text,
                       },
                     ]}
                   >
-                    {category.name}
+                    {t(category.label)}
                   </Text>
                 </TouchableOpacity>
               ))}
