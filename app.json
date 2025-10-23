@@ -6,22 +6,33 @@
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "scheme": "nourishnet",
+    "description": "Connecting food donors with those in need through a mobile platform for reducing food waste and fighting hunger.",
+    "privacy": "public",
+    "primaryColor": "#2E7D32",
+    "icon": "./assets/icon.png",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#2E7D32"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nourishnet.app"
+      "bundleIdentifier": "com.nourishnet.app",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2E7D32"
       },
       "package": "com.nourishnet.app",
+      "versionCode": 1,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -29,6 +40,9 @@
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE"
       ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
@@ -51,6 +65,11 @@
       ],
       "expo-font",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "mealsonwheels-275c2"
+      }
+    }
   }
 }
