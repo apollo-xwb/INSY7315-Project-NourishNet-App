@@ -25,3 +25,4 @@ describe('toSerializableDonation', () => {
     expect(out.expiryDate).toBe(d.toISOString());
   });
 });
+

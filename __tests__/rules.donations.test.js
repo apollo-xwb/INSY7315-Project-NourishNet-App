@@ -79,3 +79,4 @@ describe('firestore.rules donations/claims', () => {
     await expect(newRef.delete()).resolves.toBeUndefined();
   });
 });
+
