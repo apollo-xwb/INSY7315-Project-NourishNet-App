@@ -598,9 +598,8 @@ const DonationDetailsScreen = ({ route, navigation }) => {
             </View>
           )}
 
-          {}
           {/* Remove in-content action buttons on mobile to avoid duplicates; sticky footer remains */}
-          {false && (
+          {Platform.OS === 'web' && (
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[

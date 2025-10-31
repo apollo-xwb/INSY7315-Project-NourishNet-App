@@ -26,7 +26,7 @@ import { formatDistance, calculateDistance } from '../utils/location';
 import { getColumns, getMaxWidth, getPadding, isMobile } from '../utils/responsive';
 
 function toSerializableDonation(obj) {
-  if (obj == null) return obj;
+  if (obj === null || obj === undefined) return obj;
   if (obj instanceof Date) return obj.toISOString();
   if (Array.isArray(obj)) return obj.map(toSerializableDonation);
   if (typeof obj === 'object') {

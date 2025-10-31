@@ -9,23 +9,41 @@ import {
   Image,
   Alert,
   Switch,
+  Platform,
 } from 'react-native';
 import Icon from '../utils/IconWrapper';
+import { useToast } from '../contexts/AlertContext';
+import { Button, Input, Card } from '../components/ui';
+import ResponsiveContainer from '../components/ResponsiveContainer';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { getMaxWidth, getPadding, isDesktop } from '../utils/responsive';
+import { getUserRatingStats } from '../services/reviewService';
+import logger from '../utils/logger';
 
 const ProfileScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { t, i18n } = useTranslation();
   const { user: authUser, userProfile, logout, updateUserProfile } = useAuth();
-  const [userState, setUserState] = useState(userProfile || {
-    name: '',
-    email: '',
-    phone: '',
-    role: 'recipient',
-    location: { address: '' },
-    householdSize: null,
+  const { showSuccess, showError, showWarning } = useToast();
+  const [userState, setUserState] = useState(
+    userProfile || {
+      name: '',
+      email: '',
+      phone: '',
+      role: 'recipient',
+      location: { address: '' },
+      householdSize: null,
+    },
+  );
+  const [ratingStats, setRatingStats] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+    punctuality: 0,
+    quality: 0,
+    communication: 0,
+    overall: 0,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -35,7 +53,6 @@ const ProfileScreen = ({ navigation }) => {
     location: userState.location?.address || '',
     householdSize: userState.householdSize || '',
   });
-
 
   useEffect(() => {
     if (userProfile) {
@@ -49,6 +66,39 @@ const ProfileScreen = ({ navigation }) => {
       });
     }
   }, [userProfile]);
+
+  useEffect(() => {
+    if (authUser) {
+      loadRatingStats();
+      loadSettings();
+    }
+  }, [authUser]);
+
+  const loadRatingStats = async () => {
+    try {
+      const stats = await getUserRatingStats(authUser.uid);
+      logger.info('Rating stats loaded:', stats);
+      setRatingStats(stats);
+    } catch (error) {
+      logger.error('Error loading rating stats:', error);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const { getUserSettings } = require('../services/settingsService');
+      const userSettings = await getUserSettings(authUser.uid);
+      if (userSettings) {
+        setSettings({
+          notifications: userSettings.notifications ?? true,
+          lowDataMode: userSettings.lowDataMode ?? false,
+          darkMode: userSettings.darkMode ?? false,
+        });
+      }
+    } catch (error) {
+      logger.error('Error loading settings:', error);
+    }
+  };
   const [settings, setSettings] = useState({
     notifications: true,
     lowDataMode: false,
@@ -75,17 +125,17 @@ const ProfileScreen = ({ navigation }) => {
       const result = await updateUserProfile(updates);
 
       if (result.success) {
-        setUserState(prev => ({
+        setUserState((prev) => ({
           ...prev,
           ...updates,
         }));
         setIsEditing(false);
-        Alert.alert('Success', 'Profile updated successfully!');
+        showSuccess('Profile updated successfully!');
       } else {
-        Alert.alert('Error', result.error || 'Failed to update profile');
+        showError(result.error || 'Failed to update profile');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      showError('Failed to update profile. Please try again.');
     }
   };
 
@@ -101,11 +151,18 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleInputChange = (field, value) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
+    setEditData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSettingChange = (setting, value) => {
-    setSettings(prev => ({ ...prev, [setting]: value }));
+  const handleSettingChange = async (setting, value) => {
+    setSettings((prev) => ({ ...prev, [setting]: value }));
+
+    try {
+      const { updateUserSettings } = require('../services/settingsService');
+      await updateUserSettings(authUser.uid, { [setting]: value });
+    } catch (error) {
+      logger.error('Error saving setting:', error);
+    }
   };
 
   const handleLanguageChange = (language) => {
@@ -113,26 +170,28 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            const result = await logout();
-            if (result.success) {
-
-              Alert.alert('Success', 'You have been logged out successfully!');
-            } else {
-              Alert.alert('Error', result.error || 'Failed to logout');
-            }
-          },
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          const result = await logout();
+          if (result.success) {
+            showSuccess('You have been logged out successfully!');
+            try {
+              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+              // Optionally clear any app session keys (not auth tokens)
+              await AsyncStorage.removeItem('@nourishnet_has_launched');
+            } catch (_e) {}
+            // Logout will trigger navigation change automatically via AuthContext
+            // The AppNavigator will see !user and show Login screen
+          } else {
+            showError(result.error || 'Failed to logout');
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const languages = [
@@ -143,40 +202,53 @@ const ProfileScreen = ({ navigation }) => {
 
   const getRoleDisplayName = (role) => {
     switch (role) {
-      case 'donor': return t('donor');
-      case 'recipient': return t('recipient');
-      case 'volunteer': return t('volunteer');
-      default: return role;
+      case 'donor':
+        return t('donor');
+      case 'recipient':
+        return t('recipient');
+      case 'volunteer':
+        return t('volunteer');
+      default:
+        return role;
     }
   };
 
   const getRoleIcon = (role) => {
     switch (role) {
-      case 'donor': return 'volunteer-activism';
-      case 'recipient': return 'family-restroom';
-      case 'volunteer': return 'handshake';
-      default: return 'person';
+      case 'donor':
+        return 'volunteer-activism';
+      case 'recipient':
+        return 'family-restroom';
+      case 'volunteer':
+        return 'handshake';
+      default:
+        return 'person';
     }
   };
 
+  const maxWidth = getMaxWidth();
+  const padding = getPadding();
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {}
-      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      contentContainerStyle={{ maxWidth, alignSelf: 'center', width: '100%' }}
+    >
+      <View
+        style={[
+          styles.header,
+          Platform.OS === 'web' && styles.headerWeb,
+          { backgroundColor: '#000000', paddingHorizontal: padding },
+        ]}
+      >
         <View style={styles.profileInfo}>
           <View style={[styles.avatar, { backgroundColor: theme.colors.surface }]}>
             <Icon name="person" size={40} color={theme.colors.primary} />
           </View>
           <View style={styles.profileDetails}>
-            <Text style={[styles.userName, { color: theme.colors.surface }]}>
-              {userState.name}
-            </Text>
+            <Text style={[styles.userName, { color: theme.colors.surface }]}>{userState.name}</Text>
             <View style={styles.roleContainer}>
-              <Icon
-                name={getRoleIcon(userState.role)}
-                size={16}
-                color={theme.colors.surface}
-              />
+              <Icon name={getRoleIcon(userState.role)} size={16} color={theme.colors.surface} />
               <Text style={[styles.userRole, { color: theme.colors.surface }]}>
                 {getRoleDisplayName(userState.role)}
               </Text>
@@ -191,24 +263,22 @@ const ProfileScreen = ({ navigation }) => {
           onPress={isEditing ? handleSave : handleEdit}
           accessibilityLabel={isEditing ? 'Save changes' : 'Edit profile'}
         >
-          <Icon
-            name={isEditing ? 'check' : 'edit'}
-            size={20}
-            color={theme.colors.primary}
-          />
+          <Icon name={isEditing ? 'check' : 'edit'} size={20} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
-      {}
-      <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
+      <View
+        style={[
+          styles.section,
+          { backgroundColor: theme.colors.surface, marginHorizontal: padding },
+        ]}
+      >
         <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
           Personal Information
         </Text>
 
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-            {t('name')}
-          </Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('name')}</Text>
           {isEditing ? (
             <TextInput
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
@@ -217,16 +287,35 @@ const ProfileScreen = ({ navigation }) => {
               accessibilityLabel={t('name')}
             />
           ) : (
-            <Text style={[styles.inputValue, { color: theme.colors.text }]}>
-              {userState.name}
-            </Text>
+            <View>
+              <Text style={[styles.inputValue, { color: theme.colors.text }]}>
+                {userState.name}
+              </Text>
+              {ratingStats.totalReviews > 0 && (
+                <View style={styles.nameRatingRow}>
+                  <View style={styles.nameRatingStars}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Icon
+                        key={star}
+                        name={star <= Math.round(ratingStats.overall) ? 'star' : 'star-outline'}
+                        size={16}
+                        color={
+                          star <= Math.round(ratingStats.overall) ? '#FFD700' : theme.colors.border
+                        }
+                      />
+                    ))}
+                  </View>
+                  <Text style={[styles.nameRatingText, { color: theme.colors.textSecondary }]}>
+                    {ratingStats.overall} ({ratingStats.totalReviews})
+                  </Text>
+                </View>
+              )}
+            </View>
           )}
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-            {t('email')}
-          </Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('email')}</Text>
           {isEditing ? (
             <TextInput
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
@@ -237,16 +326,110 @@ const ProfileScreen = ({ navigation }) => {
               accessibilityLabel={t('email')}
             />
           ) : (
-          <Text style={[styles.inputValue, { color: theme.colors.text }]}>
-            {userState.email}
-          </Text>
+            <Text style={[styles.inputValue, { color: theme.colors.text }]}>{userState.email}</Text>
           )}
         </View>
 
+        {ratingStats.totalReviews > 0 && (
+          <View style={[styles.ratingCard, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.ratingTitle, { color: theme.colors.text }]}>
+              Reviews & Ratings
+            </Text>
+
+            <View style={styles.overallRating}>
+              <View style={styles.ratingStars}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Icon
+                    key={star}
+                    name={star <= Math.round(ratingStats.overall) ? 'star' : 'star-outline'}
+                    size={28}
+                    color={
+                      star <= Math.round(ratingStats.overall) ? '#FFD700' : theme.colors.border
+                    }
+                  />
+                ))}
+              </View>
+              <Text style={[styles.overallRatingText, { color: theme.colors.text }]}>
+                {ratingStats.overall} / 5.0
+              </Text>
+              <Text style={[styles.totalReviews, { color: theme.colors.textSecondary }]}>
+                Based on {ratingStats.totalReviews}{' '}
+                {ratingStats.totalReviews === 1 ? 'review' : 'reviews'}
+              </Text>
+            </View>
+
+            <View style={styles.ratingBreakdown}>
+              <View style={styles.ratingRow}>
+                <Icon name="schedule" size={20} color={theme.colors.textSecondary} />
+                <Text style={[styles.ratingLabel, { color: theme.colors.text }]}>Punctuality</Text>
+                <View style={styles.ratingRowStars}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Icon
+                      key={star}
+                      name={star <= Math.round(ratingStats.punctuality) ? 'star' : 'star-outline'}
+                      size={16}
+                      color={
+                        star <= Math.round(ratingStats.punctuality)
+                          ? '#FFD700'
+                          : theme.colors.border
+                      }
+                    />
+                  ))}
+                </View>
+                <Text style={[styles.ratingValue, { color: theme.colors.textSecondary }]}>
+                  {ratingStats.punctuality}
+                </Text>
+              </View>
+
+              <View style={styles.ratingRow}>
+                <Icon name="verified" size={20} color={theme.colors.textSecondary} />
+                <Text style={[styles.ratingLabel, { color: theme.colors.text }]}>Quality</Text>
+                <View style={styles.ratingRowStars}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Icon
+                      key={star}
+                      name={star <= Math.round(ratingStats.quality) ? 'star' : 'star-outline'}
+                      size={16}
+                      color={
+                        star <= Math.round(ratingStats.quality) ? '#FFD700' : theme.colors.border
+                      }
+                    />
+                  ))}
+                </View>
+                <Text style={[styles.ratingValue, { color: theme.colors.textSecondary }]}>
+                  {ratingStats.quality}
+                </Text>
+              </View>
+
+              <View style={styles.ratingRow}>
+                <Icon name="chat" size={20} color={theme.colors.textSecondary} />
+                <Text style={[styles.ratingLabel, { color: theme.colors.text }]}>
+                  Communication
+                </Text>
+                <View style={styles.ratingRowStars}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Icon
+                      key={star}
+                      name={star <= Math.round(ratingStats.communication) ? 'star' : 'star-outline'}
+                      size={16}
+                      color={
+                        star <= Math.round(ratingStats.communication)
+                          ? '#FFD700'
+                          : theme.colors.border
+                      }
+                    />
+                  ))}
+                </View>
+                <Text style={[styles.ratingValue, { color: theme.colors.textSecondary }]}>
+                  {ratingStats.communication}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
+
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-            {t('phone')}
-          </Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('phone')}</Text>
           {isEditing ? (
             <TextInput
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
@@ -263,9 +446,7 @@ const ProfileScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-            {t('location')}
-          </Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('location')}</Text>
           {isEditing ? (
             <TextInput
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
@@ -287,7 +468,10 @@ const ProfileScreen = ({ navigation }) => {
             </Text>
             {isEditing ? (
               <TextInput
-                style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                style={[
+                  styles.input,
+                  { borderColor: theme.colors.border, color: theme.colors.text },
+                ]}
                 value={editData.householdSize}
                 onChangeText={(value) => handleInputChange('householdSize', value)}
                 keyboardType="numeric"
@@ -316,10 +500,13 @@ const ProfileScreen = ({ navigation }) => {
       </View>
 
       {}
-      <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          Settings
-        </Text>
+      <View
+        style={[
+          styles.section,
+          { backgroundColor: theme.colors.surface, marginHorizontal: padding },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Settings</Text>
 
         {}
         <View style={styles.settingRow}>
@@ -372,7 +559,7 @@ const ProfileScreen = ({ navigation }) => {
                 {t('language')}
               </Text>
               <Text style={[styles.settingDescription, { color: theme.colors.textSecondary }]}>
-                Current: {languages.find(lang => lang.code === i18n.language)?.name}
+                Current: {languages.find((lang) => lang.code === i18n.language)?.name}
               </Text>
             </View>
           </View>
@@ -382,10 +569,10 @@ const ProfileScreen = ({ navigation }) => {
               Alert.alert(
                 'Select Language',
                 'Choose your preferred language',
-                languages.map(lang => ({
+                languages.map((lang) => ({
                   text: lang.name,
                   onPress: () => handleLanguageChange(lang.code),
-                }))
+                })),
               );
             }}
           >
@@ -394,20 +581,20 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {}
-      <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-          My Activity
-        </Text>
+      <View
+        style={[
+          styles.section,
+          { backgroundColor: theme.colors.surface, marginHorizontal: padding },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>My Activity</Text>
 
         <TouchableOpacity
           style={styles.historyItem}
           onPress={() => navigation.navigate('MyClaims')}
         >
           <Icon name="inventory" size={24} color={theme.colors.primary} />
-          <Text style={[styles.historyText, { color: theme.colors.text }]}>
-            My Claims
-          </Text>
+          <Text style={[styles.historyText, { color: theme.colors.text }]}>My Claims</Text>
           <Icon name="arrow-forward-ios" size={16} color={theme.colors.textSecondary} />
         </TouchableOpacity>
 
@@ -431,9 +618,7 @@ const ProfileScreen = ({ navigation }) => {
         accessibilityRole="button"
       >
         <Icon name="logout" size={20} color={theme.colors.surface} />
-        <Text style={[styles.logoutText, { color: theme.colors.surface }]}>
-          {t('logout')}
-        </Text>
+        <Text style={[styles.logoutText, { color: theme.colors.surface }]}>{t('logout')}</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -444,8 +629,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 20,
+    paddingVertical: 20,
     paddingTop: 60,
+  },
+  headerWeb: {
+    paddingTop: 20,
   },
   profileInfo: {
     flexDirection: 'row',
@@ -523,6 +711,78 @@ const styles = StyleSheet.create({
   inputValue: {
     fontSize: 16,
     paddingVertical: 12,
+  },
+  nameRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    gap: 8,
+  },
+  nameRatingStars: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  nameRatingText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  ratingCard: {
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  ratingTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  overallRating: {
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  ratingStars: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    gap: 4,
+  },
+  overallRatingText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginVertical: 8,
+  },
+  totalReviews: {
+    fontSize: 14,
+  },
+  ratingBreakdown: {
+    gap: 12,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  ratingLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  ratingRowStars: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  ratingValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    minWidth: 30,
+    textAlign: 'right',
   },
   editActions: {
     flexDirection: 'row',

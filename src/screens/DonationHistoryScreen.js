@@ -19,7 +19,7 @@ import { getUserDonations, deleteDonation as deleteFirestoreDonation, markDonati
 import { getUserClaims, getDonationById } from '../services/firestoreService';
 
 function toSerializableDonation(obj) {
-  if (obj == null) return obj;
+  if (obj === null || obj === undefined) return obj;
   if (obj instanceof Date) return obj.toISOString();
   if (Array.isArray(obj)) return obj.map(toSerializableDonation);
   if (typeof obj === 'object') {
@@ -110,11 +110,11 @@ const DonationHistoryScreen = ({ navigation }) => {
         try {
           const r = await hasUserRatedDonation(user.uid, c.id);
           if (r) rated.add(c.id);
-        } catch {}
+        } catch (_e) {}
         try {
           const v = await hasUserReviewedDonation(user.uid, c.id);
           if (v) reviewed.add(c.id);
-        } catch {}
+        } catch (_e) {}
       }
       setRatedDonations(rated);
       setReviewedDonations(reviewed);
