@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-import logger from '../utils/logger';
-
   View,
   Text,
   StyleSheet,
@@ -11,20 +9,35 @@ import logger from '../utils/logger';
   Alert,
   FlatList,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import { getMaxWidth, getPadding, isDesktop } from '../utils/responsive';
+import logger from '../utils/logger';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
+import { useToast } from '../contexts/AlertContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { submitSassaCheck, getCurrentSassaStatus } from '../services/sassaService';
-import { getUserAlerts, markAlertAsRead as markFirestoreAlertAsRead, deleteExpiredAlerts } from '../services/alertsService';
+import {
+  getUserAlerts,
+  markAlertAsRead as markFirestoreAlertAsRead,
+  markAllAlertsAsRead,
+  deleteAlert,
+  deleteExpiredAlerts,
+} from '../services/alertsService';
+import useAlerts from '../hooks/useAlerts';
 
 const AlertsScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState([]);
+  const { showError, showInfo, showSuccess } = useToast();
+  const { alerts, unreadCount, markAllAsRead, remove } = useAlerts(user?.uid, {
+    autoLoad: true,
+    autoCleanup: true,
+  });
   const [activeTab, setActiveTab] = useState('notifications');
   const [sassaForm, setSassaForm] = useState({
     idNumber: '',
@@ -36,14 +49,12 @@ const AlertsScreen = ({ navigation }) => {
   const [isLoadingSassa, setIsLoadingSassa] = useState(false);
   const [isSubmittingSassa, setIsSubmittingSassa] = useState(false);
 
-
   useFocusEffect(
     React.useCallback(() => {
-      loadAlerts();
       if (activeTab === 'sassa' && user) {
         loadSassaStatus();
       }
-    }, [activeTab, user])
+    }, [activeTab, user]),
   );
 
   const loadSassaStatus = async () => {
@@ -60,43 +71,62 @@ const AlertsScreen = ({ navigation }) => {
     }
   };
 
-  const loadAlerts = async () => {
-    if (!user) {
-      setNotifications([]);
+  const handleMarkAllAsRead = async () => {
+    const doMarkAll = async () => {
+      try {
+        await markAllAsRead();
+        showSuccess('All notifications marked as read.');
+      } catch (error) {
+        logger.error('Error marking all alerts as read:', error);
+        showError('Failed to mark all as read. Please try again.');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = typeof window !== 'undefined' && window.confirm(
+        'Mark all notifications as read?'
+      );
+      if (confirmed) doMarkAll();
       return;
     }
 
-    try {
-      await deleteExpiredAlerts(user.uid);
-      const firestoreAlerts = await getUserAlerts(user.uid);
+    Alert.alert('Mark All as Read', 'Mark all notifications as read?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Mark All Read', onPress: doMarkAll },
+    ]);
+  };
 
-      const formattedAlerts = firestoreAlerts.map(alert => ({
-        id: alert.id,
-        type: alert.type,
-        title: alert.title,
-        message: alert.message,
-        createdAt: alert.createdAt,
-        isRead: alert.read,
-        donationId: alert.donationId,
-      }));
-
-      setNotifications(formattedAlerts);
-    } catch (error) {
-      logger.error('Error loading alerts:', error);
-      setNotifications([]);
+  const handleDeleteAlert = async (alertId, event) => {
+    if (event) {
+      event.stopPropagation();
     }
+
+    const doDelete = async () => {
+      try {
+        await remove(alertId);
+        showSuccess('Notification deleted.');
+      } catch (error) {
+        logger.error('Error deleting alert:', error);
+        showError('Failed to delete notification. Please try again.');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = typeof window !== 'undefined' && window.confirm(
+        'Delete this notification?'
+      );
+      if (confirmed) doDelete();
+      return;
+    }
+
+    Alert.alert('Delete Notification', 'Are you sure you want to delete this notification?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: doDelete },
+    ]);
   };
 
   const handleNotificationPress = async (notification) => {
-
-    setNotifications(prev =>
-      prev.map(notif =>
-        notif.id === notification.id ? { ...notif, isRead: true } : notif
-      )
-    );
-
-
-    if (user) {
+    if (user && !notification.read && !notification.isRead) {
       try {
         await markFirestoreAlertAsRead(notification.id);
       } catch (error) {
@@ -104,44 +134,69 @@ const AlertsScreen = ({ navigation }) => {
       }
     }
 
-
-    if (notification.donationId) {
-      const { getDonations } = require('../services/donationService');
+    if (notification.type === 'message' && notification.chatId) {
+      const { getDonationById } = require('../services/donationService');
       try {
-        const firestoreDonations = await getDonations();
-        const donation = firestoreDonations.find(d => d.id === notification.donationId);
+        const donation = await getDonationById(notification.donationId);
+        if (donation) {
+          const recipientName = notification.title?.replace('New message from ', '') || 'User';
+          navigation.navigate('Chat', {
+            donation: {
+              ...donation,
+              createdAt:
+                donation.createdAt instanceof Date
+                  ? donation.createdAt.toISOString()
+                  : donation.createdAt,
+              updatedAt:
+                donation.updatedAt instanceof Date
+                  ? donation.updatedAt.toISOString()
+                  : donation.updatedAt,
+              expiryDate:
+                donation.expiryDate instanceof Date
+                  ? donation.expiryDate.toISOString()
+                  : donation.expiryDate,
+            },
+            recipientName: recipientName,
+            recipientId: notification.senderId,
+          });
+        }
+      } catch (error) {
+        logger.error('Error loading chat:', error);
+      }
+    } else if (notification.donationId) {
+      const { getDonationById } = require('../services/donationService');
+      try {
+        const donation = await getDonationById(notification.donationId);
 
         if (donation) {
           navigation.navigate('DonationDetails', { donation });
         } else {
-          Alert.alert('Not Found', 'This donation is no longer available.');
+          showInfo('This donation is no longer available.');
         }
       } catch (error) {
         logger.error('Error loading donation:', error);
-        Alert.alert('Error', 'Could not load donation details.');
+        showInfo('This donation is no longer available or has been removed.');
       }
     }
   };
 
   const handleSassaSubmit = async () => {
     if (!sassaForm.idNumber.trim()) {
-      Alert.alert('Error', 'Please enter your ID number');
+      showError('Please enter your ID number');
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'You must be logged in to check eligibility');
+      showError('You must be logged in to check eligibility');
       return;
     }
 
     setIsSubmittingSassa(true);
 
     try {
-
       const result = await submitSassaCheck(user.uid, sassaForm);
 
       setCurrentSassaStatus(result);
-
 
       setSassaForm({
         idNumber: '',
@@ -150,17 +205,16 @@ const AlertsScreen = ({ navigation }) => {
         employmentStatus: 'unemployed',
       });
 
-
       const statusMessages = {
-        'eligible': {
+        eligible: {
           title: '✅ Likely Eligible',
           message: result.notes,
         },
-        'potentially_eligible': {
+        potentially_eligible: {
           title: '⚠️ Potentially Eligible',
           message: result.notes,
         },
-        'not_eligible': {
+        not_eligible: {
           title: 'ℹ️ May Not Qualify',
           message: result.notes,
         },
@@ -168,59 +222,63 @@ const AlertsScreen = ({ navigation }) => {
 
       const statusMsg = statusMessages[result.eligibilityStatus] || statusMessages['not_eligible'];
 
-      Alert.alert(
-        statusMsg.title,
-        statusMsg.message,
-        [
-          {
-            text: 'View Status',
-            onPress: () => {
-
-            },
-          },
-          { text: 'OK' },
-        ]
-      );
+      showInfo(`${statusMsg.title}: ${statusMsg.message}`);
     } catch (error) {
       logger.error('Error submitting SASSA check:', error);
-      Alert.alert('Error', 'Failed to submit eligibility check. Please try again.');
+      showError('Failed to submit eligibility check. Please try again.');
     } finally {
       setIsSubmittingSassa(false);
     }
   };
 
-  const renderNotification = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.notificationCard,
-        {
-          backgroundColor: theme.colors.surface,
-          borderLeftColor: item.isRead ? theme.colors.border : theme.colors.primary,
-        },
-      ]}
-      onPress={() => handleNotificationPress(item)}
-      accessibilityLabel={`${item.title}: ${item.message}`}
-      accessibilityRole="button"
-    >
-      <View style={styles.notificationContent}>
-        <View style={styles.notificationHeader}>
-          <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>
-            {item.title}
-          </Text>
-          {!item.isRead && (
-            <View style={[styles.unreadDot, { backgroundColor: theme.colors.primary }]} />
-          )}
-        </View>
-        <Text style={[styles.notificationMessage, { color: theme.colors.textSecondary }]}>
-          {item.message}
-        </Text>
-        <Text style={[styles.notificationTime, { color: theme.colors.textSecondary }]}>
-          {item.createdAt ? `${item.createdAt.toLocaleDateString()} at ${item.createdAt.toLocaleTimeString()}` : 'Just now'}
-        </Text>
+  const renderNotification = ({ item }) => {
+    const isRead = item.read || item.isRead;
+    const createdAt = item.createdAt?.toDate?.() || (item.createdAt ? new Date(item.createdAt) : new Date());
+
+    return (
+      <View
+        style={[
+          styles.notificationCard,
+          {
+            backgroundColor: theme.colors.surface,
+            borderLeftColor: isRead ? theme.colors.border : theme.colors.primary,
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.notificationContentWrapper}
+          onPress={() => handleNotificationPress(item)}
+          accessibilityLabel={`${item.title}: ${item.message}`}
+          accessibilityRole="button"
+          activeOpacity={0.7}
+        >
+          <View style={styles.notificationContent}>
+            <View style={styles.notificationHeader}>
+              <Text style={[styles.notificationTitle, { color: theme.colors.text }]}>{item.title}</Text>
+              {!isRead && (
+                <View style={[styles.unreadDot, { backgroundColor: theme.colors.primary }]} />
+              )}
+            </View>
+            <Text style={[styles.notificationMessage, { color: theme.colors.textSecondary }]}>
+              {item.message}
+            </Text>
+            <Text style={[styles.notificationTime, { color: theme.colors.textSecondary }]}>
+              {createdAt.toLocaleDateString()} at {createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Text>
+          </View>
+          <Icon name="chevron-right" size={20} color={theme.colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={(e) => handleDeleteAlert(item.id, e)}
+          accessibilityLabel="Delete notification"
+          accessibilityRole="button"
+        >
+          <Icon name="delete-outline" size={20} color={theme.colors.error} />
+        </TouchableOpacity>
       </View>
-      <Icon name="chevron-right" size={20} color={theme.colors.textSecondary} />
-    </TouchableOpacity>
-  );
+    );
+  };
 
   const renderSassaForm = () => (
     <View style={[styles.sassaForm, { backgroundColor: theme.colors.surface }]}>
@@ -243,16 +301,19 @@ const AlertsScreen = ({ navigation }) => {
           </Text>
         </View>
       ) : currentSassaStatus && !currentSassaStatus.isExpired ? (
-        <View style={[
-          styles.statusCard,
-          {
-            backgroundColor: currentSassaStatus.eligibilityStatus === 'eligible'
-              ? theme.colors.success + '20'
-              : currentSassaStatus.eligibilityStatus === 'potentially_eligible'
-              ? theme.colors.warning + '20'
-              : theme.colors.error + '20'
-          }
-        ]}>
+        <View
+          style={[
+            styles.statusCard,
+            {
+              backgroundColor:
+                currentSassaStatus.eligibilityStatus === 'eligible'
+                  ? theme.colors.success + '20'
+                  : currentSassaStatus.eligibilityStatus === 'potentially_eligible'
+                    ? theme.colors.warning + '20'
+                    : theme.colors.error + '20',
+            },
+          ]}
+        >
           <View style={styles.statusHeader}>
             <Icon
               name={currentSassaStatus.eligibilityStatus === 'eligible' ? 'check-circle' : 'info'}
@@ -261,14 +322,17 @@ const AlertsScreen = ({ navigation }) => {
                 currentSassaStatus.eligibilityStatus === 'eligible'
                   ? theme.colors.success
                   : currentSassaStatus.eligibilityStatus === 'potentially_eligible'
-                  ? theme.colors.warning
-                  : theme.colors.error
+                    ? theme.colors.warning
+                    : theme.colors.error
               }
             />
             <Text style={[styles.statusTitle, { color: theme.colors.text }]}>
-              Current Status: {currentSassaStatus.eligibilityStatus === 'eligible' ? 'Likely Eligible' :
-                             currentSassaStatus.eligibilityStatus === 'potentially_eligible' ? 'Potentially Eligible' :
-                             'May Not Qualify'}
+              Current Status:{' '}
+              {currentSassaStatus.eligibilityStatus === 'eligible'
+                ? 'Likely Eligible'
+                : currentSassaStatus.eligibilityStatus === 'potentially_eligible'
+                  ? 'Potentially Eligible'
+                  : 'May Not Qualify'}
             </Text>
           </View>
           <Text style={[styles.statusNotes, { color: theme.colors.textSecondary }]}>
@@ -292,15 +356,13 @@ const AlertsScreen = ({ navigation }) => {
 
       <View style={styles.formContainer}>
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-            ID Number *
-          </Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>ID Number *</Text>
           <TextInput
             style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
             placeholder="Enter your South African ID number"
             placeholderTextColor={theme.colors.textSecondary}
             value={sassaForm.idNumber}
-            onChangeText={(value) => setSassaForm(prev => ({ ...prev, idNumber: value }))}
+            onChangeText={(value) => setSassaForm((prev) => ({ ...prev, idNumber: value }))}
             keyboardType="numeric"
             maxLength={13}
             accessibilityLabel="ID Number"
@@ -316,31 +378,27 @@ const AlertsScreen = ({ navigation }) => {
             placeholder="How many people depend on you?"
             placeholderTextColor={theme.colors.textSecondary}
             value={sassaForm.dependents}
-            onChangeText={(value) => setSassaForm(prev => ({ ...prev, dependents: value }))}
+            onChangeText={(value) => setSassaForm((prev) => ({ ...prev, dependents: value }))}
             keyboardType="numeric"
             accessibilityLabel="Number of dependents"
           />
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-            Monthly Income (R)
-          </Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Monthly Income (R)</Text>
           <TextInput
             style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
             placeholder="Your monthly household income"
             placeholderTextColor={theme.colors.textSecondary}
             value={sassaForm.monthlyIncome}
-            onChangeText={(value) => setSassaForm(prev => ({ ...prev, monthlyIncome: value }))}
+            onChangeText={(value) => setSassaForm((prev) => ({ ...prev, monthlyIncome: value }))}
             keyboardType="numeric"
             accessibilityLabel="Monthly income"
           />
         </View>
 
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-            Employment Status
-          </Text>
+          <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Employment Status</Text>
           <View style={styles.employmentOptions}>
             {['Employed', 'Unemployed', 'Self-employed', 'Student', 'Retired'].map((status) => (
               <TouchableOpacity
@@ -348,21 +406,23 @@ const AlertsScreen = ({ navigation }) => {
                 style={[
                   styles.employmentOption,
                   {
-                    backgroundColor: sassaForm.employmentStatus === status
-                      ? theme.colors.primary
-                      : theme.colors.background,
+                    backgroundColor:
+                      sassaForm.employmentStatus === status
+                        ? theme.colors.primary
+                        : theme.colors.background,
                     borderColor: theme.colors.border,
                   },
                 ]}
-                onPress={() => setSassaForm(prev => ({ ...prev, employmentStatus: status }))}
+                onPress={() => setSassaForm((prev) => ({ ...prev, employmentStatus: status }))}
               >
                 <Text
                   style={[
                     styles.employmentOptionText,
                     {
-                      color: sassaForm.employmentStatus === status
-                        ? theme.colors.surface
-                        : theme.colors.text,
+                      color:
+                        sassaForm.employmentStatus === status
+                          ? theme.colors.surface
+                          : theme.colors.text,
                     },
                   ]}
                 >
@@ -378,8 +438,8 @@ const AlertsScreen = ({ navigation }) => {
             styles.checkButton,
             {
               backgroundColor: isSubmittingSassa ? theme.colors.border : theme.colors.primary,
-              opacity: isSubmittingSassa ? 0.7 : 1
-            }
+              opacity: isSubmittingSassa ? 0.7 : 1,
+            },
           ]}
           onPress={handleSassaSubmit}
           disabled={isSubmittingSassa}
@@ -405,23 +465,51 @@ const AlertsScreen = ({ navigation }) => {
     </View>
   );
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const formattedAlerts = alerts.map((alert) => ({
+    id: alert.id,
+    type: alert.type,
+    title: alert.title,
+    message: alert.message,
+    createdAt: alert.createdAt,
+    read: alert.read,
+    isRead: alert.read,
+    donationId: alert.donationId,
+    senderId: alert.senderId,
+    chatId: alert.chatId,
+  }));
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-        <Text style={[styles.headerTitle, { color: theme.colors.surface }]}>
-          {t('alerts')}
-        </Text>
+      <View
+        style={[
+          styles.header,
+          Platform.OS === 'web' && styles.headerWeb,
+          { backgroundColor: '#000000' },
+        ]}
+      >
+        <View style={styles.headerTop}>
+          <Text style={[styles.headerTitle, { color: theme.colors.surface }]}>{t('alerts')}</Text>
+          {activeTab === 'notifications' && unreadCount > 0 && (
+            <TouchableOpacity
+              style={styles.markAllButton}
+              onPress={handleMarkAllAsRead}
+              accessibilityLabel="Mark all as read"
+            >
+              <Icon name="done-all" size={20} color={theme.colors.surface} />
+              <Text style={[styles.markAllText, { color: theme.colors.surface }]}>
+                Mark All Read
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={styles.tabContainer}>
           <TouchableOpacity
             style={[
               styles.tab,
               {
-                backgroundColor: activeTab === 'notifications'
-                  ? theme.colors.surface
-                  : 'transparent',
+                backgroundColor:
+                  activeTab === 'notifications' ? theme.colors.surface : 'transparent',
               },
             ]}
             onPress={() => setActiveTab('notifications')}
@@ -430,9 +518,8 @@ const AlertsScreen = ({ navigation }) => {
               style={[
                 styles.tabText,
                 {
-                  color: activeTab === 'notifications'
-                    ? theme.colors.primary
-                    : theme.colors.surface,
+                  color:
+                    activeTab === 'notifications' ? theme.colors.primary : theme.colors.surface,
                 },
               ]}
             >
@@ -443,9 +530,7 @@ const AlertsScreen = ({ navigation }) => {
             style={[
               styles.tab,
               {
-                backgroundColor: activeTab === 'sassa'
-                  ? theme.colors.surface
-                  : 'transparent',
+                backgroundColor: activeTab === 'sassa' ? theme.colors.surface : 'transparent',
               },
             ]}
             onPress={() => setActiveTab('sassa')}
@@ -454,9 +539,7 @@ const AlertsScreen = ({ navigation }) => {
               style={[
                 styles.tabText,
                 {
-                  color: activeTab === 'sassa'
-                    ? theme.colors.primary
-                    : theme.colors.surface,
+                  color: activeTab === 'sassa' ? theme.colors.primary : theme.colors.surface,
                 },
               ]}
             >
@@ -469,7 +552,7 @@ const AlertsScreen = ({ navigation }) => {
       {/* Content */}
       {activeTab === 'notifications' ? (
         <FlatList
-          data={notifications}
+          data={formattedAlerts}
           keyExtractor={(item) => item.id}
           renderItem={renderNotification}
           contentContainerStyle={styles.notificationsList}
@@ -484,9 +567,7 @@ const AlertsScreen = ({ navigation }) => {
           }
         />
       ) : (
-        <ScrollView style={styles.sassaContainer}>
-          {renderSassaForm()}
-        </ScrollView>
+        <ScrollView style={styles.sassaContainer}>{renderSassaForm()}</ScrollView>
       )}
     </View>
   );
@@ -501,10 +582,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+  headerWeb: {
+    paddingTop: 20,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
+    flex: 1,
+  },
+  markAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    gap: 6,
+  },
+  markAllText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -539,8 +642,17 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  notificationContentWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   notificationContent: {
     flex: 1,
+  },
+  deleteButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   notificationHeader: {
     flexDirection: 'row',
