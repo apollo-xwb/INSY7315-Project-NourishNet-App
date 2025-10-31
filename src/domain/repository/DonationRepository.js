@@ -1,21 +1,4 @@
-/**
- * Donation Repository Implementation
- * 
- * @fileoverview Firebase implementation of the Donation repository pattern.
- * Abstracts Firestore and Storage operations for donation data access.
- * 
- * @author NourishNet Development Team
- * @AI-Assisted Code generation and pattern implementation with Claude AI (Anthropic)
- * All code reviewed, tested, and understood by the development team.
- * See AI_ASSISTANCE_DECLARATION.md for full disclosure.
- * 
- * Design Pattern: Repository Pattern
- * - Separates data access logic from business logic
- * - Provides testable abstraction over Firebase SDK
- * - Enables easy swapping of data sources
- * 
- * Reference: Fowler, M. (2002). Patterns of Enterprise Application Architecture.
- */
+// Repository for donation data access operations (Firestore and Storage)
 
 import {
   collection,
@@ -34,19 +17,7 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../../config/firebase';
 
-/**
- * DonationRepository Interface (documentation-only)
- * Methods:
- * - create(donationData, userId) => Promise<Donation>
- * - findAvailable() => Promise<Donation[]>
- * - findByUser(userId) => Promise<Donation[]>
- * - findById(id) => Promise<Donation>
- * - updateStatus(id, status, claimedBy?) => Promise<void>
- * - markPickedUp(id, userId) => Promise<void>
- * - cancelClaim(id, userId) => Promise<void>
- * - delete(id) => Promise<void>
- * - subscribeAvailable(callback, errorCallback) => Unsubscribe
- */
+// Main repository class implementing donation CRUD operations
 export class FirebaseDonationRepository {
   async uploadImageIfNeeded(image, donationIdHint) {
     if (!image || !image.startsWith('file://')) {
