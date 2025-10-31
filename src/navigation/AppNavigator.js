@@ -3,13 +3,12 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, Platform, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import logger from '../utils/logger';
-
-
 
 import SplashScreen from '../screens/SplashScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -29,10 +28,10 @@ import CompleteProfileScreen from '../screens/CompleteProfileScreen';
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-
 const MainTabNavigator = () => {
   const { theme } = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -48,8 +47,8 @@ const MainTabNavigator = () => {
             iconName = 'chat';
           } else if (route.name === 'Profile') {
             iconName = 'person';
-          } else if (route.name === 'Alerts') {
-            iconName = 'notifications';
+          } else if (route.name === 'Activity') {
+            iconName = 'inventory';
           }
 
           return <Icon name={iconName} size={size} color={color} />;
@@ -59,14 +58,14 @@ const MainTabNavigator = () => {
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 5,
+          paddingBottom: Math.max(insets.bottom, 8),
           paddingTop: 8,
-          height: Platform.OS === 'ios' ? 85 : 65,
+          height: 62 + Math.max(insets.bottom, 8),
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
-          marginBottom: Platform.OS === 'ios' ? 0 : 5,
+          marginBottom: 0,
         },
         headerStyle: {
           backgroundColor: theme.colors.primary,
@@ -77,38 +76,48 @@ const MainTabNavigator = () => {
         },
       })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ title: t('home') }}
-      />
+      {/* Swap to make Post central and prominent */}
+      <Tab.Screen name="Home" component={HomeScreen} options={{ title: t('home') }} />
+      <Tab.Screen name="Chats" component={ChatsListScreen} options={{ title: 'Chats' }} />
       <Tab.Screen
         name="Post"
         component={PostDonationScreen}
-        options={{ title: t('post') }}
+        options={{
+          title: t('post'),
+          tabBarIcon: ({ color, size }) => (
+            <View style={{
+              backgroundColor: theme.colors.primary,
+              padding: 10,
+              borderRadius: 28,
+              marginTop: -20,
+              elevation: 6,
+              shadowColor: '#000',
+              shadowOpacity: 0.2,
+              shadowOffset: { width: 0, height: 3 },
+              shadowRadius: 4,
+            }}>
+              <Icon name="add" size={size + 10} color={theme.colors.surface} />
+            </View>
+          ),
+          tabBarLabel: '',
+        }}
       />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: t('profile') }} />
       <Tab.Screen
-        name="Chats"
-        component={ChatsListScreen}
-        options={{ title: 'Chats' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ title: t('profile') }}
-      />
-      <Tab.Screen
-        name="Alerts"
-        component={AlertsScreen}
-        options={{ title: t('alerts') }}
+        name="Activity"
+        component={DonationHistoryScreen}
+        options={{
+          title: 'Activity',
+          headerShown: false,
+        }}
       />
     </Tab.Navigator>
   );
 };
 
-
 const AppNavigator = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
   const { user, userProfile, loading: authLoading } = useAuth();
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
   const [checkingFirstLaunch, setCheckingFirstLaunch] = useState(true);
@@ -135,21 +144,18 @@ const AppNavigator = () => {
     }
   };
 
-
   useEffect(() => {
     if (isFirstLaunch === false && !user) {
-
       setCheckingFirstLaunch(false);
     }
   }, [isFirstLaunch, user]);
-
 
   if (authLoading || checkingFirstLaunch) {
     return <SplashScreen />;
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer key={user ? 'authenticated' : 'unauthenticated'}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {isFirstLaunch ? (
           <Stack.Screen
@@ -159,7 +165,7 @@ const AppNavigator = () => {
               onComplete: () => {
                 setIsFirstLaunch(false);
                 checkFirstLaunch();
-              }
+              },
             }}
           />
         ) : !user ? (
@@ -167,7 +173,9 @@ const AppNavigator = () => {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
           </>
-        ) : !userProfile?.profileComplete || !userProfile?.phone || !userProfile?.location?.address ? (
+        ) : !userProfile?.profileComplete ||
+          !userProfile?.phone ||
+          !userProfile?.location?.address ? (
           <Stack.Screen
             name="CompleteProfile"
             component={CompleteProfileScreen}
@@ -177,15 +185,22 @@ const AppNavigator = () => {
           />
         ) : (
           <>
-            <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+            <Stack.Screen
+              name="MainTabs"
+              component={MainTabNavigator}
+              options={{
+                headerShown: false,
+              }}
+            />
             <Stack.Screen
               name="DonationDetails"
               component={DonationDetailsScreen}
               options={{
                 headerShown: true,
                 title: 'Donation Details',
-                headerStyle: { backgroundColor: '#2E7D32' },
+                headerStyle: { backgroundColor: '#84bd00' },
                 headerTintColor: '#FFFFFF',
+                headerBackTitle: 'Back',
               }}
             />
             <Stack.Screen
@@ -194,8 +209,9 @@ const AppNavigator = () => {
               options={{
                 headerShown: true,
                 title: 'Chat',
-                headerStyle: { backgroundColor: '#2E7D32' },
+                headerStyle: { backgroundColor: '#84bd00' },
                 headerTintColor: '#FFFFFF',
+                headerBackTitle: 'Back',
               }}
             />
             <Stack.Screen
@@ -204,8 +220,9 @@ const AppNavigator = () => {
               options={{
                 headerShown: true,
                 title: 'My Claims',
-                headerStyle: { backgroundColor: '#2E7D32' },
+                headerStyle: { backgroundColor: '#84bd00' },
                 headerTintColor: '#FFFFFF',
+                headerBackTitle: 'Back',
               }}
             />
             <Stack.Screen
@@ -214,8 +231,20 @@ const AppNavigator = () => {
               options={{
                 headerShown: true,
                 title: 'My Activity',
-                headerStyle: { backgroundColor: '#2E7D32' },
+                headerStyle: { backgroundColor: '#84bd00' },
                 headerTintColor: '#FFFFFF',
+                headerBackTitle: 'Back',
+              }}
+            />
+            <Stack.Screen
+              name="Alerts"
+              component={AlertsScreen}
+              options={{
+                headerShown: true,
+                title: t('alerts'),
+                headerStyle: { backgroundColor: '#84bd00' },
+                headerTintColor: '#FFFFFF',
+                headerBackTitle: 'Back',
               }}
             />
           </>
