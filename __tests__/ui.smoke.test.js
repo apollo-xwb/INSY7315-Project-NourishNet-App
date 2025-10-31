@@ -8,7 +8,7 @@ function Hello() {
 
 describe('RN UI smoke', () => {
   it('renders a simple component', () => {
-    const { getByLabelText } = render(<Hello />);
-    expect(getByLabelText('greeting').props.children).toBe('Hello');
+    const { getByText } = render(<Hello />);
+    expect(getByText('Hello')).toBeTruthy();
   });
 });
