@@ -1,0 +1,183 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocumentOwner(resource) {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read user profiles (for displaying names, etc.)
+      allow read: if true;
+      
+      // Users can only create/update their own profile
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      
+      // Users can delete their own profile
+      allow delete: if isOwner(userId);
+    }
+    
+    // Donations collection
+    match /donations/{donationId} {
+      // Anyone can read available donations
+      allow read: if true;
+      
+      // Only authenticated users can create donations
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'available';
+      
+      // Only owners can update their own donations (recipients do not change donation status)
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own donations (only if not claimed)
+      allow delete: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid
+        && resource.data.status == 'available';
+    }
+
+    // Claims collection
+    match /claims/{claimId} {
+      // Users can read their own claims; donors can read claims on their donations
+      allow read: if isAuthenticated();
+      // Any authenticated user can create a claim for a donation
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Claimant can update or cancel their own claim document
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Messages collection (for chat)
+    match /messages/{messageId} {
+      // Users can read messages in chats they're part of
+      // ChatId format: donationId_userId1_userId2
+      allow read: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      
+      // Allow querying messages by chatId if user is part of the chat
+      // This is needed for real-time listeners
+      allow list: if isAuthenticated();
+      
+      // Users can create messages as themselves
+      allow create: if isAuthenticated() 
+        && request.resource.data.senderId == request.auth.uid;
+      
+      // Users can update their own messages (e.g., mark as read)
+      allow update: if isAuthenticated() && (
+        resource.data.senderId == request.auth.uid ||
+        resource.data.receiverId == request.auth.uid
+      );
+      
+      // Users can delete their own messages
+      allow delete: if isAuthenticated() 
+        && resource.data.senderId == request.auth.uid;
+    }
+    
+    // Alerts/Notifications collection
+    match /alerts/{alertId} {
+      // Users can only read their own alerts
+      allow read: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+      
+      // Only system/authenticated users can create alerts
+      allow create: if isAuthenticated();
+      
+      // Users can update their own alerts (e.g., mark as read)
+      allow update: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+      
+      // Users can delete their own alerts
+      allow delete: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+    }
+    
+    // SASSA applications collection
+    match /sassaApplications/{applicationId} {
+      // Users can only read their own applications
+      allow read: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+      
+      // Users can create their own applications
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own applications
+      allow update: if isAuthenticated() 
+        && resource.data.userId == request.auth.uid;
+      
+      // Users cannot delete applications (for record keeping)
+      allow delete: if false;
+    }
+    
+    // Ratings collection
+    match /ratings/{ratingId} {
+      // Anyone can read ratings (for displaying on profiles)
+      allow read: if true;
+      
+      // Only authenticated users can create ratings
+      // Must be rating someone else (not themselves)
+      allow create: if isAuthenticated()
+        && request.resource.data.raterUserId == request.auth.uid
+        && request.resource.data.raterUserId != request.resource.data.ratedUserId;
+      
+      // Users can update their own ratings
+      allow update: if isAuthenticated()
+        && resource.data.raterUserId == request.auth.uid;
+      
+      // Users can delete their own ratings
+      allow delete: if isAuthenticated()
+        && resource.data.raterUserId == request.auth.uid;
+    }
+    
+    // Reviews collection
+    match /reviews/{reviewId} {
+      // Anyone can read reviews (for displaying on profiles)
+      allow read: if true;
+      
+      // Only authenticated users can create reviews
+      // Must be reviewing the donor (not themselves)
+      allow create: if isAuthenticated()
+        && request.resource.data.reviewerId == request.auth.uid
+        && request.resource.data.reviewerId != request.resource.data.donorId;
+      
+      // Users can update their own reviews
+      allow update: if isAuthenticated()
+        && resource.data.reviewerId == request.auth.uid;
+      
+      // Users can delete their own reviews
+      allow delete: if isAuthenticated()
+        && resource.data.reviewerId == request.auth.uid;
+    }
+    
+    // User settings collection
+    match /userSettings/{userId} {
+      // Users can only read their own settings
+      allow read: if isOwner(userId);
+      
+      // Users can create/update their own settings
+      allow create, update: if isOwner(userId);
+      
+      // Users can delete their own settings
+      allow delete: if isOwner(userId);
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
