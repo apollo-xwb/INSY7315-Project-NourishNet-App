@@ -5,104 +5,138 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Alert,
   ScrollView,
+  Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/AlertContext';
+import sanitize from '../utils/sanitize';
 
 const LoginScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { signin, signInWithGoogle } = useAuth();
+  const { showError } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
+    // Client-side validation: ensure both fields are provided
     if (!email.trim() || !password.trim()) {
-      Alert.alert(t('error'), 'Please fill in all fields');
+      showError('Please fill in all fields');
       return;
     }
 
+    // Set loading state to disable button and show feedback
     setIsLoading(true);
 
     try {
-      const result = await signin(email.trim(), password);
+      // Sanitize inputs to remove potentially malicious characters (XSS prevention)
+      const cleanEmail = sanitize(email.trim());
+      const cleanPassword = sanitize(password);
+      
+      // Call authentication service which handles Firebase Auth
+      const result = await signin(cleanEmail, cleanPassword);
 
-      if (result.success) {
-
-      } else {
-        Alert.alert(t('error'), result.error || 'Login failed. Please check your credentials.');
+      // If authentication fails, show specific error message to user
+      if (!result.success) {
+        showError(result.error || 'Login failed. Please check your credentials.');
       }
+      // On success, navigation is handled automatically by AuthContext and AppNavigator
     } catch (error) {
-      Alert.alert(t('error'), 'Login failed. Please try again.');
+      // Catch any unexpected errors and show generic message (security: don't leak details)
+      showError('Login failed. Please try again.');
     } finally {
+      // Always reset loading state, even if authentication fails
       setIsLoading(false);
     }
   };
 
+  /**
+   * Handles Google OAuth sign-in
+   * - Opens Google sign-in flow via expo-auth-session
+   * - Handles redirect and token exchange
+   * - Shows appropriate error messages
+   */
   const handleGoogleSignIn = async () => {
+    // Set loading state during OAuth flow
     setIsLoading(true);
 
     try {
+      // Initiates Google OAuth flow (opens browser/Google sign-in page)
       const result = await signInWithGoogle();
 
+      // Check if OAuth flow completed successfully
       if (!result.success) {
-        Alert.alert(t('error'), result.error || 'Google sign-in failed. Please try again.');
+        showError(result.error || 'Google sign-in failed. Please try again.');
       }
+      // On success, AuthContext handles navigation automatically
     } catch (error) {
-      Alert.alert(t('error'), 'Google sign-in failed. Please try again.');
+      // Handle any errors during OAuth flow
+      showError('Google sign-in failed. Please try again.');
     } finally {
+      // Reset loading state when done
       setIsLoading(false);
     }
   };
 
+  /**
+   * Placeholder for password reset functionality
+   * Currently shows alert, will integrate Firebase Auth password reset in future
+   */
   const handleForgotPassword = () => {
     Alert.alert(
       'Forgot Password',
       'Password reset functionality will be implemented with Firebase Auth.',
-      [{ text: 'OK' }]
+      [{ text: 'OK' }],
     );
   };
 
   return (
+    // SafeAreaView ensures content doesn't overlap with system UI (notch, status bar)
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* KeyboardAvoidingView prevents keyboard from covering input fields */}
+      {/* iOS uses 'padding', Android uses 'height' due to different keyboard behaviors */}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardAvoidingView}
       >
+        {/* ScrollView allows content to scroll if keyboard takes up space */}
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {}
+          {/* Header section: App logo and welcome text */}
           <View style={styles.header}>
-            <View style={[styles.logo, { backgroundColor: theme.colors.primary }]}>
-              <Text style={[styles.logoText, { color: theme.colors.surface }]}>
-                NN
-              </Text>
-            </View>
-            <Text style={[styles.appName, { color: theme.colors.text }]}>
-              {t('appName')}
-            </Text>
+            {/* App logo image */}
+            <Image source={require('../UTurn.png')} style={styles.logo} resizeMode="contain" />
+            {/* App name text with theme-aware color */}
+            <Text style={[styles.appName, { color: theme.colors.text }]}>{t('appName')}</Text>
+            {/* Welcome message translated based on user's language preference */}
             <Text style={[styles.welcomeText, { color: theme.colors.textSecondary }]}>
               {t('welcome')}
             </Text>
           </View>
 
-          {}
+          {/* Form container: Contains all login inputs and buttons */}
           <View style={[styles.formContainer, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.formTitle, { color: theme.colors.text }]}>
-              {t('login')}
-            </Text>
+            {/* Form title */}
+            <Text style={[styles.formTitle, { color: theme.colors.text }]}>{t('login')}</Text>
 
-            {}
+            {/* Email input field */}
             <View style={styles.inputContainer}>
-              <Icon name="email" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="email"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder={t('email')}
@@ -118,7 +152,12 @@ const LoginScreen = ({ navigation }) => {
 
             {}
             <View style={styles.inputContainer}>
-              <Icon name="lock" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="lock"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder={t('password')}
@@ -142,10 +181,7 @@ const LoginScreen = ({ navigation }) => {
             </View>
 
             {}
-            <TouchableOpacity
-              onPress={handleForgotPassword}
-              style={styles.forgotPasswordContainer}
-            >
+            <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPasswordContainer}>
               <Text style={[styles.forgotPasswordText, { color: theme.colors.primary }]}>
                 {t('forgotPassword')}
               </Text>
@@ -228,16 +264,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 120,
+    height: 120,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
     elevation: 5,
   },
   logoText: {

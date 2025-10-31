@@ -38,29 +38,16 @@ const SplashScreen = () => {
       >
         {}
         <View style={[styles.logo, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.logoText, { color: theme.colors.primary }]}>
-            NN
-          </Text>
+          <Text style={[styles.logoText, { color: theme.colors.primary }]}>NN</Text>
         </View>
 
-        <Text style={[styles.appName, { color: theme.colors.surface }]}>
-          {t('appName')}
-        </Text>
+        <Text style={[styles.appName, { color: theme.colors.surface }]}>{t('appName')}</Text>
 
-        <Text style={[styles.tagline, { color: theme.colors.surface }]}>
-          {t('tagline')}
-        </Text>
+        <Text style={[styles.tagline, { color: theme.colors.surface }]}>{t('tagline')}</Text>
       </Animated.View>
 
-      <Animated.View
-        style={[
-          styles.loadingContainer,
-          { opacity: fadeAnim },
-        ]}
-      >
-        <Text style={[styles.loadingText, { color: theme.colors.surface }]}>
-          {t('loading')}
-        </Text>
+      <Animated.View style={[styles.loadingContainer, { opacity: fadeAnim }]}>
+        <Text style={[styles.loadingText, { color: theme.colors.surface }]}>{t('loading')}</Text>
       </Animated.View>
     </View>
   );
@@ -114,5 +101,3 @@ const styles = StyleSheet.create({
 });
 
 export default SplashScreen;
-
-

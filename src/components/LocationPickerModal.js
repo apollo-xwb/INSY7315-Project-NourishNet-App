@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-import logger from '../utils/logger';
-
   View,
   Text,
   StyleSheet,
@@ -13,21 +11,69 @@ import logger from '../utils/logger';
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import logger from '../utils/logger';
 import * as Location from 'expo-location';
 import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../utils/IconWrapper';
 import MapComponent from './MapComponent';
 
-
 const MOCK_LOCATIONS = [
-  { id: 1, name: 'Soweto, Johannesburg', address: 'Soweto, Johannesburg, South Africa', lat: -26.2678, lng: 27.8585 },
-  { id: 2, name: 'Alexandra, Johannesburg', address: 'Alexandra Township, Johannesburg, South Africa', lat: -26.1028, lng: 28.0997 },
-  { id: 3, name: 'Khayelitsha, Cape Town', address: 'Khayelitsha, Cape Town, South Africa', lat: -34.0387, lng: 18.6677 },
-  { id: 4, name: 'Umlazi, Durban', address: 'Umlazi, Durban, South Africa', lat: -29.9674, lng: 30.8942 },
-  { id: 5, name: 'Mamelodi, Pretoria', address: 'Mamelodi, Pretoria, South Africa', lat: -25.7110, lng: 28.3562 },
-  { id: 6, name: 'Mitchells Plain, Cape Town', address: 'Mitchells Plain, Cape Town, South Africa', lat: -34.0515, lng: 18.6286 },
-  { id: 7, name: 'Tembisa, Johannesburg', address: 'Tembisa, Johannesburg, South Africa', lat: -25.9966, lng: 28.2249 },
-  { id: 8, name: 'KwaMashu, Durban', address: 'KwaMashu, Durban, South Africa', lat: -29.7432, lng: 30.9811 },
+  {
+    id: 1,
+    name: 'Soweto, Johannesburg',
+    address: 'Soweto, Johannesburg, South Africa',
+    lat: -26.2678,
+    lng: 27.8585,
+  },
+  {
+    id: 2,
+    name: 'Alexandra, Johannesburg',
+    address: 'Alexandra Township, Johannesburg, South Africa',
+    lat: -26.1028,
+    lng: 28.0997,
+  },
+  {
+    id: 3,
+    name: 'Khayelitsha, Cape Town',
+    address: 'Khayelitsha, Cape Town, South Africa',
+    lat: -34.0387,
+    lng: 18.6677,
+  },
+  {
+    id: 4,
+    name: 'Umlazi, Durban',
+    address: 'Umlazi, Durban, South Africa',
+    lat: -29.9674,
+    lng: 30.8942,
+  },
+  {
+    id: 5,
+    name: 'Mamelodi, Pretoria',
+    address: 'Mamelodi, Pretoria, South Africa',
+    lat: -25.711,
+    lng: 28.3562,
+  },
+  {
+    id: 6,
+    name: 'Mitchells Plain, Cape Town',
+    address: 'Mitchells Plain, Cape Town, South Africa',
+    lat: -34.0515,
+    lng: 18.6286,
+  },
+  {
+    id: 7,
+    name: 'Tembisa, Johannesburg',
+    address: 'Tembisa, Johannesburg, South Africa',
+    lat: -25.9966,
+    lng: 28.2249,
+  },
+  {
+    id: 8,
+    name: 'KwaMashu, Durban',
+    address: 'KwaMashu, Durban, South Africa',
+    lat: -29.7432,
+    lng: 30.9811,
+  },
 ];
 
 const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocation }) => {
@@ -46,10 +92,10 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
 
   useEffect(() => {
     if (searchQuery.length > 2) {
-
-      const filtered = MOCK_LOCATIONS.filter(loc =>
-        loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        loc.address.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = MOCK_LOCATIONS.filter(
+        (loc) =>
+          loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          loc.address.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setSuggestions(filtered);
     } else {
@@ -61,26 +107,21 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
     try {
       setIsLoadingGPS(true);
 
-
       const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== 'granted') {
-        Alert.alert(
-          'Permission Denied',
-          'Please grant location permissions to use GPS feature.',
-          [{ text: 'OK' }]
-        );
+        Alert.alert('Permission Denied', 'Please grant location permissions to use GPS feature.', [
+          { text: 'OK' },
+        ]);
         setIsLoadingGPS(false);
         return;
       }
-
 
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
 
       const { latitude, longitude } = location.coords;
-
 
       const addresses = await Location.reverseGeocodeAsync({
         latitude,
@@ -89,7 +130,9 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
 
       const address = addresses[0];
       const formattedAddress = address
-        ? `${address.street || ''}, ${address.city || ''}, ${address.region || ''}, ${address.country || ''}`.replace(/^,\s*/, '').replace(/,\s*,/g, ',')
+        ? `${address.street || ''}, ${address.city || ''}, ${address.region || ''}, ${address.country || ''}`
+            .replace(/^,\s*/, '')
+            .replace(/,\s*,/g, ',')
         : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
 
       const locationData = {
@@ -114,7 +157,7 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
       Alert.alert(
         'GPS Error',
         'Could not retrieve your location. Please ensure GPS is enabled or select location manually.',
-        [{ text: 'OK' }]
+        [{ text: 'OK' }],
       );
       setIsLoadingGPS(false);
     }
@@ -139,9 +182,7 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
   };
 
   const handleMapPress = async (event) => {
-
     const coordinate = event.nativeEvent.coordinate;
-
 
     try {
       const addresses = await Location.reverseGeocodeAsync({
@@ -151,7 +192,9 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
 
       const address = addresses[0];
       const formattedAddress = address
-        ? `${address.street || ''}, ${address.city || ''}, ${address.region || ''}, ${address.country || ''}`.replace(/^,\s*/, '').replace(/,\s*,/g, ',')
+        ? `${address.street || ''}, ${address.city || ''}, ${address.region || ''}, ${address.country || ''}`
+            .replace(/^,\s*/, '')
+            .replace(/,\s*,/g, ',')
         : `${coordinate.latitude.toFixed(6)}, ${coordinate.longitude.toFixed(6)}`;
 
       const locationData = {
@@ -169,7 +212,6 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
         longitudeDelta: 0.01,
       });
     } catch (error) {
-
       const locationData = {
         address: `${coordinate.latitude.toFixed(6)}, ${coordinate.longitude.toFixed(6)}`,
         latitude: coordinate.latitude,
@@ -191,21 +233,20 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={false}
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {}
-        <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
+        <View
+          style={[
+            styles.header,
+            Platform.OS === 'ios' && styles.modalHeaderIOS,
+            { backgroundColor: theme.colors.primary },
+          ]}
+        >
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Icon name="close" size={24} color={theme.colors.surface} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: theme.colors.surface }]}>
-            Select Location
-          </Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.surface }]}>Select Location</Text>
           <View style={styles.placeholder} />
         </View>
 
@@ -282,14 +323,20 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
             <MapComponent
               style={styles.map}
               region={mapRegion}
-              markers={selectedLocation ? [{
-                coordinate: {
-                  latitude: selectedLocation.latitude,
-                  longitude: selectedLocation.longitude,
-                },
-                title: 'Selected Location',
-                description: selectedLocation.address,
-              }] : []}
+              markers={
+                selectedLocation
+                  ? [
+                      {
+                        coordinate: {
+                          latitude: selectedLocation.latitude,
+                          longitude: selectedLocation.longitude,
+                        },
+                        title: 'Selected Location',
+                        description: selectedLocation.address,
+                      },
+                    ]
+                  : []
+              }
               onRegionChangeComplete={setMapRegion}
               onLongPress={handleMapPress}
             />
@@ -313,7 +360,7 @@ const LocationPickerModal = ({ visible, onClose, onLocationSelect, initialLocati
         <TouchableOpacity
           style={[
             styles.confirmButton,
-            { backgroundColor: selectedLocation ? theme.colors.primary : theme.colors.border }
+            { backgroundColor: selectedLocation ? theme.colors.primary : theme.colors.border },
           ]}
           onPress={handleConfirm}
           disabled={!selectedLocation}
@@ -337,7 +384,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'ios' ? 50 : 16,
+    paddingTop: 16,
+  },
+  modalHeaderIOS: {
+    paddingTop: 50,
   },
   closeButton: {
     padding: 8,
@@ -460,7 +510,7 @@ const styles = StyleSheet.create({
   },
   confirmButton: {
     marginHorizontal: 16,
-    marginBottom: Platform.OS === 'ios' ? 32 : 16,
+    marginBottom: 16,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -472,4 +522,3 @@ const styles = StyleSheet.create({
 });
 
 export default LocationPickerModal;
-

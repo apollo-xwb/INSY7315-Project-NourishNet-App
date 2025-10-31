@@ -1,13 +1,6 @@
-import {
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import logger from '../utils/logger';
-
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc
-} from 'firebase/firestore';
 import { db } from '../config/firebase';
-
 
 const DEFAULT_SETTINGS = {
   notifications: {
@@ -37,7 +30,6 @@ const DEFAULT_SETTINGS = {
   updatedAt: new Date().toISOString(),
 };
 
-
 export const getUserSettings = async (userId) => {
   try {
     const settingsRef = doc(db, 'userSettings', userId);
@@ -49,7 +41,6 @@ export const getUserSettings = async (userId) => {
         ...settingsDoc.data(),
       };
     } else {
-
       await setDoc(settingsRef, DEFAULT_SETTINGS);
       return DEFAULT_SETTINGS;
     }
@@ -59,7 +50,6 @@ export const getUserSettings = async (userId) => {
   }
 };
 
-
 export const updateUserSettings = async (userId, settings) => {
   try {
     const settingsRef = doc(db, 'userSettings', userId);
@@ -68,7 +58,6 @@ export const updateUserSettings = async (userId, settings) => {
       ...settings,
       updatedAt: new Date().toISOString(),
     };
-
 
     const settingsDoc = await getDoc(settingsRef);
 
@@ -88,7 +77,6 @@ export const updateUserSettings = async (userId, settings) => {
   }
 };
 
-
 export const updateNotificationSettings = async (userId, notificationSettings) => {
   try {
     return await updateUserSettings(userId, {
@@ -99,7 +87,6 @@ export const updateNotificationSettings = async (userId, notificationSettings) =
     throw error;
   }
 };
-
 
 export const updateThemePreference = async (userId, theme) => {
   try {
@@ -116,7 +103,6 @@ export const updateThemePreference = async (userId, theme) => {
   }
 };
 
-
 export const updateLanguagePreference = async (userId, language) => {
   try {
     const currentSettings = await getUserSettings(userId);
@@ -132,7 +118,6 @@ export const updateLanguagePreference = async (userId, language) => {
   }
 };
 
-
 export const updatePrivacySettings = async (userId, privacySettings) => {
   try {
     return await updateUserSettings(userId, {
@@ -144,7 +129,6 @@ export const updatePrivacySettings = async (userId, privacySettings) => {
   }
 };
 
-
 export const resetSettings = async (userId) => {
   try {
     const settingsRef = doc(db, 'userSettings', userId);
@@ -155,7 +139,6 @@ export const resetSettings = async (userId) => {
     throw error;
   }
 };
-
 
 export const toggleLowDataMode = async (userId, enabled) => {
   try {
@@ -171,5 +154,3 @@ export const toggleLowDataMode = async (userId, enabled) => {
     throw error;
   }
 };
-
-

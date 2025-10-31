@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import logger from '../utils/logger';
 
-
 const ThemeContext = createContext();
 
 export const useTheme = () => {
@@ -12,14 +11,14 @@ export const useTheme = () => {
     return {
       theme: {
         colors: {
-          primary: '#2E7D32',
+          primary: '#84bd00',
           surface: '#FFFFFF',
           text: '#212121',
           textSecondary: '#757575',
           background: '#F5F5F5',
           border: '#E0E0E0',
           error: '#F44336',
-          success: '#4CAF50',
+          success: '#84bd00',
           warning: '#FF9800',
         },
         spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32 },
@@ -30,7 +29,13 @@ export const useTheme = () => {
           body: { fontSize: 16, fontWeight: 'normal' },
         },
         shadows: {
-          small: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+          small: {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 2,
+            elevation: 2,
+          },
         },
       },
       isDarkMode: false,
@@ -45,10 +50,9 @@ export const ThemeProvider = ({ children }) => {
 
   const theme = {
     colors: {
-
-      primary: '#2E7D32',
-      primaryLight: '#4CAF50',
-      primaryDark: '#1B5E20',
+      primary: '#84bd00',
+      primaryLight: '#9dd116',
+      primaryDark: '#6a9600',
       secondary: '#8D6E63',
       secondaryLight: '#A1887F',
       secondaryDark: '#5D4037',
@@ -59,7 +63,7 @@ export const ThemeProvider = ({ children }) => {
       textSecondary: '#757575',
       textLight: '#BDBDBD',
       error: '#F44336',
-      success: '#4CAF50',
+      success: '#84bd00',
       warning: '#FF9800',
       info: '#2196F3',
       border: '#E0E0E0',

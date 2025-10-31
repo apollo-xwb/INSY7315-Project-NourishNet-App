@@ -1,6 +1,4 @@
 import {
-import logger from '../utils/logger';
-
   collection,
   doc,
   getDoc,
@@ -14,13 +12,10 @@ import logger from '../utils/logger';
   limit,
   onSnapshot,
   serverTimestamp,
-  addDoc
+  addDoc,
 } from 'firebase/firestore';
+import logger from '../utils/logger';
 import { db } from '../config/firebase';
-
-
-
-
 
 export const createDonation = async (donationData, userId) => {
   try {
@@ -32,7 +27,7 @@ export const createDonation = async (donationData, userId) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       claimedBy: null,
-      claimedAt: null
+      claimedAt: null,
     };
 
     const docRef = await addDoc(donationRef, donation);
@@ -47,7 +42,6 @@ export const getDonations = async (filters = {}) => {
   try {
     let q = collection(db, 'donations');
 
-
     const constraints = [];
 
     if (filters.status) {
@@ -57,7 +51,6 @@ export const getDonations = async (filters = {}) => {
     if (filters.category) {
       constraints.push(where('category', '==', filters.category));
     }
-
 
     constraints.push(orderBy('createdAt', 'desc'));
 
@@ -72,13 +65,14 @@ export const getDonations = async (filters = {}) => {
     const querySnapshot = await getDocs(q);
     const donations = [];
 
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
       donations.push({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-        expiryDate: doc.data().expiryDate ? new Date(doc.data().expiryDate) : null
+        id: docSnap.id,
+        ...data,
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt,
+        expiryDate: data.expiryDate?.toDate ? data.expiryDate.toDate() : data.expiryDate || null,
       });
     });
 
@@ -101,8 +95,10 @@ export const getDonationById = async (donationId) => {
           ...donationDoc.data(),
           createdAt: donationDoc.data().createdAt?.toDate(),
           updatedAt: donationDoc.data().updatedAt?.toDate(),
-          expiryDate: donationDoc.data().expiryDate ? new Date(donationDoc.data().expiryDate) : null
-        }
+          expiryDate: donationDoc.data().expiryDate?.toDate
+            ? donationDoc.data().expiryDate.toDate()
+            : donationDoc.data().expiryDate || null,
+        },
       };
     } else {
       return { success: false, error: 'Donation not found' };
@@ -118,7 +114,7 @@ export const updateDonation = async (donationId, updates) => {
     const donationRef = doc(db, 'donations', donationId);
     await updateDoc(donationRef, {
       ...updates,
-      updatedAt: serverTimestamp()
+      updatedAt: serverTimestamp(),
     });
 
     return { success: true };
@@ -140,22 +136,14 @@ export const deleteDonation = async (donationId) => {
 
 export const claimDonation = async (donationId, userId, claimData) => {
   try {
-    const donationRef = doc(db, 'donations', donationId);
-    await updateDoc(donationRef, {
-      status: 'claimed',
-      claimedBy: userId,
-      claimedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-
-
+    // Do not mutate donation status; allow multiple reservations.
     const claimRef = collection(db, 'claims');
     await addDoc(claimRef, {
       donationId,
       userId,
       ...claimData,
       status: 'pending',
-      createdAt: serverTimestamp()
+      createdAt: serverTimestamp(),
     });
 
     return { success: true };
@@ -165,16 +153,31 @@ export const claimDonation = async (donationId, userId, claimData) => {
   }
 };
 
-
-
-
+export const markClaimPickedUp = async (donationId, userId) => {
+  try {
+    const q = query(
+      collection(db, 'claims'),
+      where('donationId', '==', donationId),
+      where('userId', '==', userId),
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return { success: false, error: 'Claim not found' };
+    await Promise.all(
+      snap.docs.map((d) => updateDoc(doc(db, 'claims', d.id), { status: 'picked_up', updatedAt: serverTimestamp() })),
+    );
+    return { success: true };
+  } catch (error) {
+    logger.error('Error marking claim picked up:', error);
+    return { success: false, error: error.message };
+  }
+};
 
 export const getUserDonations = async (userId) => {
   try {
     const q = query(
       collection(db, 'donations'),
       where('donorId', '==', userId),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
 
     const querySnapshot = await getDocs(q);
@@ -186,7 +189,7 @@ export const getUserDonations = async (userId) => {
         ...doc.data(),
         createdAt: doc.data().createdAt?.toDate(),
         updatedAt: doc.data().updatedAt?.toDate(),
-        expiryDate: doc.data().expiryDate ? new Date(doc.data().expiryDate) : null
+        expiryDate: doc.data().expiryDate ? new Date(doc.data().expiryDate) : null,
       });
     });
 
@@ -197,16 +200,12 @@ export const getUserDonations = async (userId) => {
   }
 };
 
-
-
-
-
 export const getUserClaims = async (userId) => {
   try {
     const q = query(
       collection(db, 'claims'),
       where('userId', '==', userId),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
 
     const querySnapshot = await getDocs(q);
@@ -216,7 +215,7 @@ export const getUserClaims = async (userId) => {
       claims.push({
         id: doc.id,
         ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()
+        createdAt: doc.data().createdAt?.toDate(),
       });
     });
 
@@ -226,10 +225,6 @@ export const getUserClaims = async (userId) => {
     return { success: false, error: error.message, data: [] };
   }
 };
-
-
-
-
 
 export const subscribeToDonations = (callback, filters = {}) => {
   let q = collection(db, 'donations');
@@ -250,22 +245,24 @@ export const subscribeToDonations = (callback, filters = {}) => {
     q = query(q, ...constraints);
   }
 
-  return onSnapshot(q, (querySnapshot) => {
-    const donations = [];
-    querySnapshot.forEach((doc) => {
-      donations.push({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate(),
-        updatedAt: doc.data().updatedAt?.toDate(),
-        expiryDate: doc.data().expiryDate ? new Date(doc.data().expiryDate) : null
+  return onSnapshot(
+    q,
+    (querySnapshot) => {
+      const donations = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        donations.push({
+          id: docSnap.id,
+          ...data,
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt,
+          expiryDate: data.expiryDate?.toDate ? data.expiryDate.toDate() : data.expiryDate || null,
+        });
       });
-    });
-    callback(donations);
-  }, (error) => {
-    logger.error('Error in donations listener:', error);
-  });
+      callback(donations);
+    },
+    (error) => {
+      logger.error('Error in donations listener:', error);
+    },
+  );
 };
-
-
-

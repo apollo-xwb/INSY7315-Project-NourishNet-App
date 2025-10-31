@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import {
-import logger from '../utils/logger';
-
   View,
   Text,
   StyleSheet,
@@ -11,7 +9,10 @@ import logger from '../utils/logger';
   Image,
   Alert,
   Platform,
+  Dimensions,
 } from 'react-native';
+import { getMaxWidth, getPadding, isDesktop } from '../utils/responsive';
+import logger from '../utils/logger';
 import * as ImagePicker from 'expo-image-picker';
 import DatePickerWrapper from '../components/DatePickerWrapper';
 import LocationPickerModal from '../components/LocationPickerModal';
@@ -22,11 +23,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { DONATION_CATEGORIES } from '../constants/categories';
 import { createDonation } from '../services/donationService';
 import { createAlert } from '../services/alertsService';
+import { optimizeImageForUpload, uploadImageToStorage } from '../utils/imageUtils';
+import { useImagePicker } from '../hooks';
+import { useToast } from '../contexts/AlertContext';
+import sanitize, { sanitizeObject } from '../utils/sanitize';
 
 const PostDonationScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { user, userProfile } = useAuth();
+  const { showSuccess, showError, showWarning } = useToast();
   const [formData, setFormData] = useState({
     itemName: '',
     description: '',
@@ -38,17 +44,23 @@ const PostDonationScreen = ({ navigation }) => {
     location: '',
     locationCoords: null,
   });
-  const [image, setImage] = useState(null);
+  const {
+    images,
+    pickImage,
+    removeImage,
+    clearImages,
+    loading: pickingImages,
+  } = useImagePicker({ multiple: true, maxImages: 5, quality: 0.9 });
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleLocationSelect = (locationData) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       location: locationData.address,
       locationCoords: {
@@ -58,90 +70,40 @@ const PostDonationScreen = ({ navigation }) => {
     }));
   };
 
-  const pickImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // Image picking handled by useImagePicker.pickImage
 
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload photos.');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        setImage(result.assets[0]);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
-    }
-  };
-
-  const takePhoto = async () => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera permissions to take photos.');
-        return;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        setImage(result.assets[0]);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to take photo. Please try again.');
-    }
-  };
+  // removeImage provided by useImagePicker
 
   const showImagePicker = () => {
-    Alert.alert(
-      'Select Image',
-      'Choose how you want to add a photo',
-      [
-        { text: 'Camera', onPress: takePhoto },
-        { text: 'Gallery', onPress: pickImage },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+    // Simple chooser using gallery by default; camera available via button below
+    pickImage();
   };
 
   const validateForm = () => {
     const { itemName, description, quantity, location } = formData;
 
-    if (!image) {
-      Alert.alert(t('error'), 'Please add a photo of the donation');
+    if (images.length === 0) {
+      showError('Please add at least one photo of the donation');
       return false;
     }
 
     if (!itemName.trim()) {
-      Alert.alert(t('error'), 'Please enter the item name');
+      showError('Please enter the item name');
       return false;
     }
 
     if (!description.trim()) {
-      Alert.alert(t('error'), 'Please enter a description');
+      showError('Please enter a description');
       return false;
     }
 
     if (!quantity.trim()) {
-      Alert.alert(t('error'), 'Please enter the quantity');
+      showError('Please enter the quantity');
       return false;
     }
 
     if (!location.trim()) {
-      Alert.alert(t('error'), 'Please enter the pickup location');
+      showError('Please enter the pickup location');
       return false;
     }
 
@@ -154,31 +116,45 @@ const PostDonationScreen = ({ navigation }) => {
     setIsLoading(true);
 
     try {
-
-      const donationData = {
-        itemName: formData.itemName,
-        description: formData.description,
-        quantity: formData.quantity,
+      // Upload images and replace URIs with download URLs
+      let imageUrls = [];
+      for (let img of images) {
+        if (img?.uri && (img.uri.startsWith('blob:') || img.uri.startsWith('data:') || img.uri.startsWith('file://'))) {
+          try {
+            const url = await uploadImageToStorage(img.uri);
+            imageUrls.push(url);
+          } catch (e) {
+            showError('Image upload failed. Please try again.');
+            setIsLoading(false);
+            return;
+          }
+        } else if (img?.uri && img.uri.startsWith('https://')) {
+          imageUrls.push(img.uri);
+        }
+      }
+      const donationData = sanitizeObject({
+        itemName: sanitize(formData.itemName),
+        description: sanitize(formData.description),
+        quantity: sanitize(formData.quantity),
         category: formData.category,
         expiryDate: formData.expiryDate,
-        pickupTimeStart: formData.pickupTimeStart,
-        pickupTimeEnd: formData.pickupTimeEnd,
+        pickupTimeStart: sanitize(formData.pickupTimeStart),
+        pickupTimeEnd: sanitize(formData.pickupTimeEnd),
         location: {
-          address: formData.location,
+          address: sanitize(formData.location),
           latitude: formData.locationCoords?.latitude || 0,
           longitude: formData.locationCoords?.longitude || 0,
         },
-        image: image?.uri || null,
-        donorName: userProfile?.name || user?.displayName || 'Anonymous',
-        donorContact: userProfile?.phone || 'Not provided',
-        donorEmail: userProfile?.email || user?.email || '',
-      };
-
+        images: imageUrls,
+        image: imageUrls.length > 0 ? imageUrls[0] : null,
+        donorName: sanitize(userProfile?.name || user?.displayName || 'Anonymous'),
+        donorContact: sanitize(userProfile?.phone || 'Not provided'),
+        donorEmail: sanitize(userProfile?.email || user?.email || ''),
+      });
 
       const savedDonation = await createDonation(donationData, user.uid);
 
       logger.log('Donation created in Firestore:', savedDonation.id);
-
 
       try {
         await createAlert(user.uid, {
@@ -189,37 +165,25 @@ const PostDonationScreen = ({ navigation }) => {
         });
       } catch (alertError) {
         logger.error('Error creating alert:', alertError);
-
       }
 
-      Alert.alert(
-        t('success'),
-        'Donation posted successfully! It will be visible to recipients shortly.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-
-              setFormData({
-                itemName: '',
-                description: '',
-                quantity: '',
-                category: 'vegetables',
-                expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-                pickupTimeStart: '09:00',
-                pickupTimeEnd: '17:00',
-                location: '',
-                locationCoords: null,
-              });
-              setImage(null);
-              navigation.navigate('Home');
-            },
-          },
-        ]
-      );
+      showSuccess('Donation posted successfully! It will be visible shortly.');
+      setFormData({
+        itemName: '',
+        description: '',
+        quantity: '',
+        category: 'vegetables',
+        expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        pickupTimeStart: '09:00',
+        pickupTimeEnd: '17:00',
+        location: '',
+        locationCoords: null,
+      });
+      clearImages();
+      navigation.navigate('Home');
     } catch (error) {
       logger.error('Error posting donation:', error);
-      Alert.alert(t('error'), 'Failed to post donation. Please try again.');
+      showError('Failed to post donation. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -234,43 +198,59 @@ const PostDonationScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      contentContainerStyle={{
+        maxWidth: getMaxWidth(),
+        alignSelf: 'center',
+        width: '100%',
+        paddingHorizontal: getPadding(),
+      }}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <View style={styles.content}>
         {}
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Photo (Required)
+            Photos (Required - up to 5)
           </Text>
-          <TouchableOpacity
-            style={[styles.imageContainer, { borderColor: theme.colors.border }]}
-            onPress={showImagePicker}
-            accessibilityLabel="Add photo"
-            accessibilityRole="button"
-          >
-            {image ? (
-              <Image source={{ uri: image.uri }} style={styles.selectedImage} />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Icon name="add-a-photo" size={48} color={theme.colors.textSecondary} />
-                <Text style={[styles.imagePlaceholderText, { color: theme.colors.textSecondary }]}>
-                  Tap to add photo
-                </Text>
+          <View style={styles.imagesGrid}>
+            {images.map((img, index) => (
+              <View key={index} style={[styles.imageWrapper, { borderColor: theme.colors.border }]}>
+                <Image source={{ uri: img.uri }} style={styles.selectedImage} />
+                <TouchableOpacity
+                  style={[styles.removeImageButton, { backgroundColor: theme.colors.error }]}
+                  onPress={() => removeImage(index)}
+                  accessibilityLabel="Remove photo"
+                >
+                  <Icon name="close" size={20} color={theme.colors.surface} />
+                </TouchableOpacity>
               </View>
+            ))}
+            {images.length < 5 && (
+              <TouchableOpacity
+                style={[styles.addImageButton, { borderColor: theme.colors.border }]}
+                onPress={showImagePicker}
+                accessibilityLabel="Add photo"
+                accessibilityRole="button"
+              >
+                <View style={styles.imagePlaceholder}>
+                  <Icon name="add-a-photo" size={32} color={theme.colors.textSecondary} />
+                  <Text style={[styles.addPhotoText, { color: theme.colors.textSecondary }]}>
+                    Add Photo
+                  </Text>
+                </View>
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+          </View>
         </View>
 
         {}
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Basic Information
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Basic Information</Text>
 
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-              {t('itemName')} *
-            </Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('itemName')} *</Text>
             <TextInput
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
               placeholder="e.g., Fresh Vegetables"
@@ -283,9 +263,7 @@ const PostDonationScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-              Category
-            </Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>Category</Text>
             <View style={[styles.categoryGrid]}>
               {DONATION_CATEGORIES.map((category) => (
                 <TouchableOpacity
@@ -293,22 +271,32 @@ const PostDonationScreen = ({ navigation }) => {
                   style={[
                     styles.categoryOption,
                     {
-                      backgroundColor: formData.category === category.value
-                        ? theme.colors.primary
-                        : theme.colors.background,
+                      backgroundColor:
+                        formData.category === category.value
+                          ? theme.colors.primary
+                          : theme.colors.background,
                       borderColor: theme.colors.border,
                     },
                   ]}
                   onPress={() => handleInputChange('category', category.value)}
                 >
-                  <Icon name={category.icon} size={24} color={formData.category === category.value ? theme.colors.surface : theme.colors.text} />
+                  <Icon
+                    name={category.icon}
+                    size={24}
+                    color={
+                      formData.category === category.value
+                        ? theme.colors.surface
+                        : theme.colors.text
+                    }
+                  />
                   <Text
                     style={[
                       styles.categoryText,
                       {
-                        color: formData.category === category.value
-                          ? theme.colors.surface
-                          : theme.colors.text,
+                        color:
+                          formData.category === category.value
+                            ? theme.colors.surface
+                            : theme.colors.text,
                       },
                     ]}
                   >
@@ -325,7 +313,10 @@ const PostDonationScreen = ({ navigation }) => {
               {t('description')} *
             </Text>
             <TextInput
-              style={[styles.textArea, { borderColor: theme.colors.border, color: theme.colors.text }]}
+              style={[
+                styles.textArea,
+                { borderColor: theme.colors.border, color: theme.colors.text },
+              ]}
               placeholder="Describe the donation, condition, and any special instructions..."
               placeholderTextColor={theme.colors.textSecondary}
               value={formData.description}
@@ -339,9 +330,7 @@ const PostDonationScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-              {t('quantity')} *
-            </Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('quantity')} *</Text>
             <TextInput
               style={[styles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
               placeholder="e.g., 5 kg, 10 pieces, 2 bags"
@@ -355,15 +344,11 @@ const PostDonationScreen = ({ navigation }) => {
 
         {}
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-            Timing & Location
-          </Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Timing & Location</Text>
 
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-              {t('expiryDate')}
-            </Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('expiryDate')}</Text>
             <TouchableOpacity
               style={[styles.dateButton, { borderColor: theme.colors.border }]}
               onPress={() => setShowDatePicker(true)}
@@ -378,16 +363,15 @@ const PostDonationScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-              {t('pickupTime')}
-            </Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('pickupTime')}</Text>
             <View style={styles.timeContainer}>
               <View style={styles.timeInput}>
-                <Text style={[styles.timeLabel, { color: theme.colors.textSecondary }]}>
-                  From
-                </Text>
+                <Text style={[styles.timeLabel, { color: theme.colors.textSecondary }]}>From</Text>
                 <TextInput
-                  style={[styles.timeInputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                  style={[
+                    styles.timeInputField,
+                    { borderColor: theme.colors.border, color: theme.colors.text },
+                  ]}
                   value={formData.pickupTimeStart}
                   onChangeText={(value) => handleInputChange('pickupTimeStart', value)}
                   placeholder="09:00"
@@ -395,11 +379,12 @@ const PostDonationScreen = ({ navigation }) => {
                 />
               </View>
               <View style={styles.timeInput}>
-                <Text style={[styles.timeLabel, { color: theme.colors.textSecondary }]}>
-                  To
-                </Text>
+                <Text style={[styles.timeLabel, { color: theme.colors.textSecondary }]}>To</Text>
                 <TextInput
-                  style={[styles.timeInputField, { borderColor: theme.colors.border, color: theme.colors.text }]}
+                  style={[
+                    styles.timeInputField,
+                    { borderColor: theme.colors.border, color: theme.colors.text },
+                  ]}
                   value={formData.pickupTimeEnd}
                   onChangeText={(value) => handleInputChange('pickupTimeEnd', value)}
                   placeholder="17:00"
@@ -411,11 +396,12 @@ const PostDonationScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>
-              {t('location')} *
-            </Text>
+            <Text style={[styles.inputLabel, { color: theme.colors.text }]}>{t('location')} *</Text>
             <TouchableOpacity
-              style={[styles.locationButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}
+              style={[
+                styles.locationButton,
+                { borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+              ]}
               onPress={() => setShowLocationPicker(true)}
               accessibilityLabel={t('location')}
             >
@@ -435,7 +421,8 @@ const PostDonationScreen = ({ navigation }) => {
             </TouchableOpacity>
             {formData.locationCoords && (
               <Text style={[styles.coordsText, { color: theme.colors.textSecondary }]}>
-                📍 GPS: {formData.locationCoords.latitude.toFixed(6)}, {formData.locationCoords.longitude.toFixed(6)}
+                📍 GPS: {formData.locationCoords.latitude.toFixed(6)},{' '}
+                {formData.locationCoords.longitude.toFixed(6)}
               </Text>
             )}
           </View>
@@ -482,11 +469,15 @@ const PostDonationScreen = ({ navigation }) => {
         visible={showLocationPicker}
         onClose={() => setShowLocationPicker(false)}
         onLocationSelect={handleLocationSelect}
-        initialLocation={formData.locationCoords ? {
-          address: formData.location,
-          latitude: formData.locationCoords.latitude,
-          longitude: formData.locationCoords.longitude,
-        } : null}
+        initialLocation={
+          formData.locationCoords
+            ? {
+                address: formData.location,
+                latitude: formData.locationCoords.latitude,
+                longitude: formData.locationCoords.longitude,
+              }
+            : null
+        }
       />
     </ScrollView>
   );
@@ -514,21 +505,48 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
   },
-  imageContainer: {
-    borderWidth: 2,
-    borderStyle: 'dashed',
+  imagesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  imageWrapper: {
+    width: 120,
+    height: 120,
     borderRadius: 8,
-    height: 200,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
   },
   selectedImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 6,
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addImageButton: {
+    width: 120,
+    height: 120,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imagePlaceholder: {
     alignItems: 'center',
+  },
+  addPhotoText: {
+    fontSize: 12,
+    marginTop: 4,
   },
   imagePlaceholderText: {
     marginTop: 8,

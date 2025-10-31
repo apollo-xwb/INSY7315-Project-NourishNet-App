@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import logger from '../utils/logger';
 
-
 const QUEUE_KEY = '@nourishnet_offline_queue';
 
 export const queueOfflineOperation = async (type, data) => {
@@ -14,7 +13,7 @@ export const queueOfflineOperation = async (type, data) => {
       data,
       timestamp: new Date().toISOString(),
       retries: 0,
-      status: 'pending'
+      status: 'pending',
     };
 
     queue.push(operation);
@@ -58,7 +57,11 @@ export const processQueue = async () => {
             result = await createDonation(operation.data.donationData, operation.data.userId);
             break;
           case 'CLAIM_DONATION':
-            result = await claimDonation(operation.data.donationId, operation.data.userId, operation.data.claimData);
+            result = await claimDonation(
+              operation.data.donationId,
+              operation.data.userId,
+              operation.data.claimData,
+            );
             break;
           default:
             logger.warn('Unknown operation type:', operation.type);
@@ -89,7 +92,7 @@ export const processQueue = async () => {
 };
 
 export const initializeOfflineSync = () => {
-  NetInfo.addEventListener(state => {
+  NetInfo.addEventListener((state) => {
     if (state.isConnected && state.isInternetReachable) {
       logger.log('Network restored, processing offline queue...');
       processQueue();
@@ -100,4 +103,3 @@ export const initializeOfflineSync = () => {
 export const clearQueue = async () => {
   await AsyncStorage.removeItem(QUEUE_KEY);
 };
-

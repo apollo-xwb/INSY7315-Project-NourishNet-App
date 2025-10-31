@@ -5,22 +5,26 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   Alert,
   ScrollView,
+  Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/AlertContext';
+import sanitize, { sanitizeObject } from '../utils/sanitize';
 
 const RegisterScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { signup, signInWithGoogle } = useAuth();
+  const { showError, showSuccess } = useToast();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -34,39 +38,39 @@ const RegisterScreen = ({ navigation }) => {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const validateForm = () => {
     const { name, email, password, confirmPassword } = formData;
 
     if (!name.trim()) {
-      Alert.alert(t('error'), 'Please enter your name');
+      showError('Please enter your name');
       return false;
     }
 
     if (!email.trim()) {
-      Alert.alert(t('error'), 'Please enter your email');
+      showError('Please enter your email');
       return false;
     }
 
     if (!password.trim()) {
-      Alert.alert(t('error'), 'Please enter a password');
+      showError('Please enter a password');
       return false;
     }
 
     if (password.length < 6) {
-      Alert.alert(t('error'), 'Password must be at least 6 characters');
+      showError('Password must be at least 6 characters');
       return false;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert(t('error'), 'Passwords do not match');
+      showError('Passwords do not match');
       return false;
     }
 
     if (!privacyAccepted) {
-      Alert.alert(t('error'), 'Please accept the privacy policy');
+      showError('Please accept the privacy policy');
       return false;
     }
 
@@ -81,38 +85,33 @@ const RegisterScreen = ({ navigation }) => {
     try {
       const { name, email, password, role } = formData;
 
-      const userData = {
-        name,
-        email,
+      const userData = sanitizeObject({
+        name: sanitize(name),
+        email: sanitize(email),
         phone: '',
         role,
         location: {
           address: '',
           latitude: null,
-          longitude: null
+          longitude: null,
         },
         householdSize: null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         verified: false,
         profileComplete: false,
-        photoURL: null
-      };
+        photoURL: null,
+      });
 
-      const result = await signup(email.trim(), password, userData);
+      const result = await signup(sanitize(email.trim()), sanitize(password), userData);
 
       if (result.success) {
-        Alert.alert(
-          t('success'),
-          'Registration successful! Welcome to NourishNet.',
-          [{ text: 'OK' }]
-        );
-
+        showSuccess('Registration successful! Welcome to NourishNet.');
       } else {
-        Alert.alert(t('error'), result.error || 'Registration failed. Please try again.');
+        showError(result.error || 'Registration failed. Please try again.');
       }
     } catch (error) {
-      Alert.alert(t('error'), 'Registration failed. Please try again.');
+      showError('Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -125,10 +124,10 @@ const RegisterScreen = ({ navigation }) => {
       const result = await signInWithGoogle();
 
       if (!result.success) {
-        Alert.alert(t('error'), result.error || 'Google sign-in failed. Please try again.');
+        showError(result.error || 'Google sign-in failed. Please try again.');
       }
     } catch (error) {
-      Alert.alert(t('error'), 'Google sign-in failed. Please try again.');
+      showError('Google sign-in failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -150,16 +149,20 @@ const RegisterScreen = ({ navigation }) => {
             >
               <Icon name="arrow-back" size={24} color={theme.colors.text} />
             </TouchableOpacity>
-            <Text style={[styles.title, { color: theme.colors.text }]}>
-              {t('signUp')}
-            </Text>
+            <Image source={require('../UTurn.png')} style={styles.logo} resizeMode="contain" />
+            <Text style={[styles.title, { color: theme.colors.text }]}>{t('signUp')}</Text>
           </View>
 
           {}
           <View style={[styles.formContainer, { backgroundColor: theme.colors.surface }]}>
             {}
             <View style={styles.inputContainer}>
-              <Icon name="person" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="person"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder={t('name')}
@@ -172,7 +175,12 @@ const RegisterScreen = ({ navigation }) => {
 
             {}
             <View style={styles.inputContainer}>
-              <Icon name="email" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="email"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder={t('email')}
@@ -188,7 +196,12 @@ const RegisterScreen = ({ navigation }) => {
 
             {}
             <View style={styles.inputContainer}>
-              <Icon name="lock" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="lock"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder={t('password')}
@@ -213,7 +226,12 @@ const RegisterScreen = ({ navigation }) => {
 
             {}
             <View style={styles.inputContainer}>
-              <Icon name="lock" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="lock"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.input, { color: theme.colors.text }]}
                 placeholder="Confirm Password"
@@ -330,6 +348,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 20,
+    gap: 12,
+  },
+  logo: {
+    width: 50,
+    height: 50,
   },
   backButton: {
     marginRight: 16,

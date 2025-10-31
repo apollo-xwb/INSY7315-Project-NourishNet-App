@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import { AuthProvider } from './src/contexts/AuthContext';
+import { AlertProvider } from './src/contexts/AlertContext';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import AppNavigator from './src/navigation/AppNavigator';
 import { initializeOfflineSync } from './src/services/offlineQueue';
@@ -20,8 +21,10 @@ export default function App() {
         <SafeAreaProvider>
           <ThemeProvider>
             <AuthProvider>
-              <AppNavigator />
-              <StatusBar style="light" backgroundColor="#2E7D32" />
+              <AlertProvider>
+                <AppNavigator />
+                <StatusBar style="light" backgroundColor="#84bd00" />
+              </AlertProvider>
             </AuthProvider>
           </ThemeProvider>
         </SafeAreaProvider>

@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from '../utils/IconWrapper';
 import logger from '../utils/logger';
 
-
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -16,7 +15,6 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     logger.error('ErrorBoundary caught an error:', error, errorInfo);
-
   }
 
   render() {
@@ -33,19 +31,12 @@ const ErrorFallback = ({ onRetry }) => {
     <View style={styles.container}>
       <View style={styles.errorCard}>
         <Icon name="error-outline" size={64} color="#F44336" />
-        <Text style={styles.errorTitle}>
-          Oops! Something went wrong
-        </Text>
+        <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
         <Text style={styles.errorMessage}>
           We're sorry, but something unexpected happened. Please try again.
         </Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={onRetry}
-        >
-          <Text style={styles.retryButtonText}>
-            Try Again
-          </Text>
+        <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
     </View>
