@@ -8,9 +8,7 @@ const LoadingSpinner = ({ message = 'Loading...', size = 'large' }) => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ActivityIndicator size={size} color={theme.colors.primary} />
-      <Text style={[styles.message, { color: theme.colors.text }]}>
-        {message}
-      </Text>
+      <Text style={[styles.message, { color: theme.colors.text }]}>{message}</Text>
     </View>
   );
 };
@@ -30,5 +28,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoadingSpinner;
-
-

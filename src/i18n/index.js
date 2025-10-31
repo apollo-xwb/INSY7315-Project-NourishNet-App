@@ -1,11 +1,9 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-
 const resources = {
   en: {
     translation: {
-
       welcome: 'Welcome',
       login: 'Login',
       register: 'Register',
@@ -27,7 +25,6 @@ const resources = {
       success: 'Success',
       retry: 'Retry',
 
-
       appName: 'NourishNet',
       tagline: 'Connect Surplus to Need',
       getStarted: 'Get Started',
@@ -40,12 +37,10 @@ const resources = {
       householdSize: 'Household Size',
       privacyPolicy: 'I agree to the Privacy Policy',
 
-
       home: 'Home',
       post: 'Post',
       profile: 'Profile',
       alerts: 'Alerts',
-
 
       addDonation: 'Add Donation',
       itemName: 'Item Name',
@@ -58,17 +53,14 @@ const resources = {
       report: 'Report',
       chat: 'Chat',
 
-
       newDonationNearby: 'New donation nearby',
       donationClaimed: 'Donation claimed',
       pickupReminder: 'Pickup reminder',
-
 
       notifications: 'Notifications',
       language: 'Language',
       lowDataMode: 'Low Data Mode',
       logout: 'Logout',
-
 
       slide1Title: 'Post Donations Easily',
       slide1Description: 'Share surplus food with those in need',
@@ -76,11 +68,10 @@ const resources = {
       slide2Description: 'Discover donations in your community',
       slide3Title: 'Make a Difference',
       slide3Description: 'Help combat food insecurity together',
-    }
+    },
   },
   zu: {
     translation: {
-
       welcome: 'Siyakwamukela',
       login: 'Ngena',
       register: 'Bhalisa',
@@ -102,7 +93,6 @@ const resources = {
       success: 'Impumelelo',
       retry: 'Zama futhi',
 
-
       appName: 'NourishNet',
       tagline: 'Xhuma Okusele Nokudingekayo',
       getStarted: 'Qala',
@@ -115,12 +105,10 @@ const resources = {
       householdSize: 'Usayizi Womndeni',
       privacyPolicy: 'Ngiyavuma ne-Privacy Policy',
 
-
       home: 'Ikhaya',
       post: 'Thumela',
       profile: 'Iphrofayili',
       alerts: 'Izexwayiso',
-
 
       addDonation: 'Engeza Isipho',
       itemName: 'Igama Lentu',
@@ -133,17 +121,14 @@ const resources = {
       report: 'Bika',
       chat: 'Xoxa',
 
-
       newDonationNearby: 'Isipho esisha eduze',
       donationClaimed: 'Isipho sithathwe',
       pickupReminder: 'Isikhumbuzi sokuthatha',
-
 
       notifications: 'Izaziso',
       language: 'Ulimi',
       lowDataMode: 'Imodi Yedatha Ephantsi',
       logout: 'Phuma',
-
 
       slide1Title: 'Thumela Izipho Kalula',
       slide1Description: 'Yabelana ngokudla okusele nabadingayo',
@@ -151,11 +136,10 @@ const resources = {
       slide2Description: 'Thola izipho emphakathini wakho',
       slide3Title: 'Yenza Umehluko',
       slide3Description: 'Siza ukulwa nokungabi nokudla ndawonye',
-    }
+    },
   },
   af: {
     translation: {
-
       welcome: 'Welkom',
       login: 'Teken In',
       register: 'Registreer',
@@ -177,7 +161,6 @@ const resources = {
       success: 'Sukses',
       retry: 'Probeer Weer',
 
-
       appName: 'NourishNet',
       tagline: 'Verbind Oorskot met Behoefte',
       getStarted: 'Begin',
@@ -190,12 +173,10 @@ const resources = {
       householdSize: 'Huishouding Grootte',
       privacyPolicy: 'Ek stem saam met die Privaatheidsbeleid',
 
-
       home: 'Tuis',
       post: 'Plaas',
       profile: 'Profiel',
       alerts: 'Waarskuwings',
-
 
       addDonation: 'Voeg Skenking By',
       itemName: 'Item Naam',
@@ -208,17 +189,14 @@ const resources = {
       report: 'Rapporteer',
       chat: 'Gesels',
 
-
       newDonationNearby: 'Nuwe skenking naby',
       donationClaimed: 'Skenking geëis',
       pickupReminder: 'Optel herinnering',
-
 
       notifications: 'Kennisgewings',
       language: 'Taal',
       lowDataMode: 'Lae Data Modus',
       logout: 'Teken Uit',
-
 
       slide1Title: 'Plaas Skenkings Maklik',
       slide1Description: 'Deel oorskot kos met die wat dit nodig het',
@@ -226,23 +204,21 @@ const resources = {
       slide2Description: 'Ontdek skenkings in jou gemeenskap',
       slide3Title: 'Maak n Verskil',
       slide3Description: 'Help om kosonsekerheid saam te beveg',
-    }
-  }
+    },
+  },
 };
 
-i18n
-  .use(initReactI18next)
-  .init({
-    resources,
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: {
-      escapeValue: false,
-    },
-    compatibilityJSON: 'v3',
-    react: {
-      useSuspense: false,
-    },
-  });
+i18n.use(initReactI18next).init({
+  resources,
+  lng: 'en',
+  fallbackLng: 'en',
+  interpolation: {
+    escapeValue: false,
+  },
+  compatibilityJSON: 'v3',
+  react: {
+    useSuspense: false,
+  },
+});
 
 export default i18n;

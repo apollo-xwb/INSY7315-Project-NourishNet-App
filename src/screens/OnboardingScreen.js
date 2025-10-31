@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
-import {
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import logger from '../utils/logger';
-
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Dimensions,
-} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CarouselWrapper from '../components/CarouselWrapper';
 import Icon from '../utils/IconWrapper';
@@ -17,10 +10,9 @@ import { useTranslation } from 'react-i18next';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const OnboardingScreen = ({ navigation }) => {
+const OnboardingScreen = ({ navigation, route }) => {
   const { theme } = useTheme();
   const { t, i18n } = useTranslation();
-
 
   const slides = [
     {
@@ -45,7 +37,9 @@ const OnboardingScreen = ({ navigation }) => {
       <View style={[styles.slide, { backgroundColor: theme.colors.surface }]}>
         <Icon name={item.icon} size={100} color={theme.colors.primary} style={styles.slideIcon} />
         <Text style={[styles.slideTitle, { color: theme.colors.text }]}>{item.title}</Text>
-        <Text style={[styles.slideDescription, { color: theme.colors.textSecondary }]}>{item.description}</Text>
+        <Text style={[styles.slideDescription, { color: theme.colors.textSecondary }]}>
+          {item.description}
+        </Text>
       </View>
     );
   };
@@ -82,13 +76,31 @@ const OnboardingScreen = ({ navigation }) => {
 
       <View style={styles.bottomContainer}>
         <View style={styles.languageSelector}>
-          <TouchableOpacity onPress={() => changeLanguage('en')} style={[styles.languageButton, i18n.language === 'en' && { backgroundColor: theme.colors.primaryDark }]}>
+          <TouchableOpacity
+            onPress={() => changeLanguage('en')}
+            style={[
+              styles.languageButton,
+              i18n.language === 'en' && { backgroundColor: theme.colors.primaryDark },
+            ]}
+          >
             <Text style={[styles.languageButtonText, { color: theme.colors.surface }]}>EN</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => changeLanguage('zu')} style={[styles.languageButton, i18n.language === 'zu' && { backgroundColor: theme.colors.primaryDark }]}>
+          <TouchableOpacity
+            onPress={() => changeLanguage('zu')}
+            style={[
+              styles.languageButton,
+              i18n.language === 'zu' && { backgroundColor: theme.colors.primaryDark },
+            ]}
+          >
             <Text style={[styles.languageButtonText, { color: theme.colors.surface }]}>ZU</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => changeLanguage('af')} style={[styles.languageButton, i18n.language === 'af' && { backgroundColor: theme.colors.primaryDark }]}>
+          <TouchableOpacity
+            onPress={() => changeLanguage('af')}
+            style={[
+              styles.languageButton,
+              i18n.language === 'af' && { backgroundColor: theme.colors.primaryDark },
+            ]}
+          >
             <Text style={[styles.languageButtonText, { color: theme.colors.surface }]}>AF</Text>
           </TouchableOpacity>
         </View>

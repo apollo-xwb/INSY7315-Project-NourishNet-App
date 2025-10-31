@@ -30,11 +30,13 @@ export const saveCachedLocation = async (location) => {
 export const getUserSettings = async () => {
   try {
     const settings = await AsyncStorage.getItem(STORAGE_KEYS.USER_SETTINGS);
-    return settings ? JSON.parse(settings) : {
-      notifications: true,
-      lowDataMode: false,
-      language: 'en',
-    };
+    return settings
+      ? JSON.parse(settings)
+      : {
+          notifications: true,
+          lowDataMode: false,
+          language: 'en',
+        };
   } catch (error) {
     logger.error('Error getting settings:', error);
     return { notifications: true, lowDataMode: false, language: 'en' };
@@ -70,4 +72,3 @@ export const setFirstLaunchComplete = async () => {
     return false;
   }
 };
-

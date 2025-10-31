@@ -3,23 +3,12 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native
 import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../utils/IconWrapper';
 
-
-const DatePickerWrapper = ({
-  modal,
-  open,
-  date,
-  mode,
-  minimumDate,
-  onConfirm,
-  onCancel
-}) => {
+const DatePickerWrapper = ({ modal, open, date, mode, minimumDate, onConfirm, onCancel }) => {
   const { theme } = useTheme();
-
 
   if (!date || !(date instanceof Date)) {
     return null;
   }
-
 
   if (Platform.OS === 'web') {
     if (!open) return null;
@@ -27,9 +16,7 @@ const DatePickerWrapper = ({
     return (
       <View style={[styles.webModal, { backgroundColor: theme.colors.surface }]}>
         <View style={[styles.webModalContent, { backgroundColor: theme.colors.background }]}>
-          <Text style={[styles.webModalTitle, { color: theme.colors.text }]}>
-            Select Date
-          </Text>
+          <Text style={[styles.webModalTitle, { color: theme.colors.text }]}>Select Date</Text>
 
           <input
             type="date"
@@ -47,9 +34,7 @@ const DatePickerWrapper = ({
               style={[styles.webModalButton, { backgroundColor: theme.colors.border }]}
               onPress={onCancel}
             >
-              <Text style={[styles.webModalButtonText, { color: theme.colors.text }]}>
-                Cancel
-              </Text>
+              <Text style={[styles.webModalButtonText, { color: theme.colors.text }]}>Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -66,16 +51,12 @@ const DatePickerWrapper = ({
     );
   }
 
-
-
   if (!open) return null;
 
   return (
     <View style={[styles.webModal, { backgroundColor: theme.colors.surface }]}>
       <View style={[styles.webModalContent, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.webModalTitle, { color: theme.colors.text }]}>
-          Select Date
-        </Text>
+        <Text style={[styles.webModalTitle, { color: theme.colors.text }]}>Select Date</Text>
 
         <input
           type="date"
@@ -93,9 +74,7 @@ const DatePickerWrapper = ({
             style={[styles.webModalButton, { backgroundColor: theme.colors.border }]}
             onPress={onCancel}
           >
-            <Text style={[styles.webModalButtonText, { color: theme.colors.text }]}>
-              Cancel
-            </Text>
+            <Text style={[styles.webModalButtonText, { color: theme.colors.text }]}>Cancel</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

@@ -4,23 +4,21 @@
     "slug": "nourishnet",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./src/UTurn.png",
     "userInterfaceStyle": "light",
     "scheme": "nourishnet",
     "description": "Connecting food donors with those in need through a mobile platform for reducing food waste and fighting hunger.",
     "privacy": "public",
-    "primaryColor": "#2E7D32",
-    "icon": "./assets/icon.png",
+    "primaryColor": "#84bd00",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./src/UTurn.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2E7D32"
+      "backgroundColor": "#84bd00"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.nourishnet.app",
@@ -28,8 +26,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#2E7D32"
+        "foregroundImage": "./src/UTurn.png",
+        "backgroundColor": "#84bd00"
       },
       "package": "com.nourishnet.app",
       "versionCode": 1,
@@ -42,7 +40,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./src/favicon.png"
     },
     "plugins": [
       [

@@ -4,60 +4,61 @@ import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../utils/IconWrapper';
 import logger from '../utils/logger';
 
-
-
-const MapComponent = ({ region, markers, style, onRegionChangeComplete, onMarkerPress, onLongPress }) => {
+const MapComponent = ({
+  region,
+  markers,
+  style,
+  onRegionChangeComplete,
+  onMarkerPress,
+  onLongPress,
+}) => {
   const { theme } = useTheme();
-
 
   const WebFallback = () => (
     <View style={[style, { backgroundColor: theme.colors.background, padding: 16 }]}>
-      <Text style={[styles.webMapTitle, { color: theme.colors.text }]}>
-        📍 Donation Locations
-      </Text>
-      {markers && markers.map((marker, index) => (
-        <TouchableOpacity
-          key={index}
-          style={[styles.locationItem, { backgroundColor: theme.colors.surface }]}
-          onPress={() => onMarkerPress && onMarkerPress(marker)}
-          activeOpacity={0.7}
-        >
-          <Icon name="location-on" size={20} color={theme.colors.primary} />
-          <View style={styles.locationInfo}>
-            <Text style={[styles.locationTitle, { color: theme.colors.text }]}>
-              {marker.title}
-            </Text>
-            <Text style={[styles.locationAddress, { color: theme.colors.textSecondary }]}>
-              {marker.description}
-            </Text>
-          </View>
-          <Icon name="chevron-right" size={20} color={theme.colors.textSecondary} />
-        </TouchableOpacity>
-      ))}
+      <Text style={[styles.webMapTitle, { color: theme.colors.text }]}>📍 Donation Locations</Text>
+      {markers &&
+        markers.map((marker, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.locationItem, { backgroundColor: theme.colors.surface }]}
+            onPress={() => onMarkerPress && onMarkerPress(marker)}
+            activeOpacity={0.7}
+          >
+            <Icon name="location-on" size={20} color={theme.colors.primary} />
+            <View style={styles.locationInfo}>
+              <Text style={[styles.locationTitle, { color: theme.colors.text }]}>
+                {marker.title}
+              </Text>
+              <Text style={[styles.locationAddress, { color: theme.colors.textSecondary }]}>
+                {marker.description}
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={20} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+        ))}
       <Text style={[styles.webMapNote, { color: theme.colors.textSecondary }]}>
         Interactive map is available on mobile devices
       </Text>
     </View>
   );
 
-
   if (Platform.OS === 'web') {
     return <WebFallback />;
   }
 
+  const MapView = require('react-native-maps').default;
+  const { Marker } = require('react-native-maps');
 
-  try {
-    const MapView = require('react-native-maps').default;
-    const { Marker } = require('react-native-maps');
-
-    return (
-      <MapView
-        style={style}
-        region={region}
-        onRegionChangeComplete={onRegionChangeComplete}
-        onLongPress={onLongPress}
-      >
-        {markers && markers.map((marker, index) => (
+  return (
+    <MapView
+      style={style}
+      region={region}
+      onRegionChangeComplete={onRegionChangeComplete}
+      onLongPress={onLongPress}
+    >
+      {markers &&
+        markers.map((marker, index) => (
           <Marker
             key={index}
             coordinate={{
@@ -71,13 +72,8 @@ const MapComponent = ({ region, markers, style, onRegionChangeComplete, onMarker
             {marker.customMarker}
           </Marker>
         ))}
-      </MapView>
-    );
-  } catch (error) {
-
-    logger.warn('Native maps failed to load, using fallback:', error);
-    return <WebFallback />;
-  }
+    </MapView>
+  );
 };
 
 const styles = StyleSheet.create({

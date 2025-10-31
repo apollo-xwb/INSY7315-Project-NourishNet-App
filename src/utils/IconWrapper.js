@@ -4,11 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import IconFallback from '../components/IconFallback';
 import logger from '../utils/logger';
 
-
 const Icon = ({ name, size = 24, color = '#000', style, ...props }) => {
-
   const safeStyle = style || {};
-
 
   try {
     return <MaterialIcons name={name} size={size} color={color} style={safeStyle} {...props} />;

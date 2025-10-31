@@ -5,10 +5,8 @@ import Icon from '../utils/IconWrapper';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-
 const CarouselWrapper = ({ data, renderItem, sliderWidth, itemWidth, loop }) => {
   const { theme } = useTheme();
-
 
   if (Platform.OS === 'web') {
     return (
@@ -26,8 +24,6 @@ const CarouselWrapper = ({ data, renderItem, sliderWidth, itemWidth, loop }) => 
       </ScrollView>
     );
   }
-
-
 
   return (
     <ScrollView

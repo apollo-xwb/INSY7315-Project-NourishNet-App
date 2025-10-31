@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import {
-import logger from '../utils/logger';
-
   View,
   Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import logger from '../utils/logger';
 import * as Location from 'expo-location';
 import Icon from '../utils/IconWrapper';
 import { useTheme } from '../contexts/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/AlertContext';
 
 const CompleteProfileScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { t } = useTranslation();
   const { userProfile, updateUserProfile } = useAuth();
+  const { showInfo, showError, showSuccess } = useToast();
 
   const [phone, setPhone] = useState(userProfile?.phone || '');
   const [householdSize, setHouseholdSize] = useState(userProfile?.householdSize?.toString() || '');
@@ -45,10 +46,8 @@ const CompleteProfileScreen = ({ navigation }) => {
         setLocationPermissionGranted(true);
         getCurrentLocation();
       } else {
-        Alert.alert(
-          'Location Permission',
+        showInfo(
           'Location access helps us show you nearby donations. You can still use the app without it.',
-          [{ text: 'OK' }]
         );
       }
     } catch (error) {
@@ -66,35 +65,37 @@ const CompleteProfileScreen = ({ navigation }) => {
       const { latitude, longitude } = location.coords;
       setCoordinates({ latitude, longitude });
 
-
       const addresses = await Location.reverseGeocodeAsync({ latitude, longitude });
       if (addresses.length > 0) {
         const address = addresses[0];
-        const formattedAddress = `${address.street || ''}, ${address.city || ''}, ${address.region || ''}, ${address.country || ''}`.replace(/^, |, $/g, '');
+        const formattedAddress =
+          `${address.street || ''}, ${address.city || ''}, ${address.region || ''}, ${address.country || ''}`.replace(
+            /^, |, $/g,
+            '',
+          );
         setLocation(formattedAddress);
       }
     } catch (error) {
       logger.error('Error getting location:', error);
-      Alert.alert('Error', 'Could not get your current location. Please enter it manually.');
+      showError('Could not get your current location. Please enter it manually.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSave = async () => {
-
     if (!phone.trim()) {
-      Alert.alert('Required', 'Please enter your phone number');
+      showError('Please enter your phone number');
       return;
     }
 
     if (userProfile?.role === 'recipient' && !householdSize.trim()) {
-      Alert.alert('Required', 'Please enter your household size');
+      showError('Please enter your household size');
       return;
     }
 
     if (!location.trim()) {
-      Alert.alert('Required', 'Please enter your location');
+      showError('Please enter your location');
       return;
     }
 
@@ -115,40 +116,27 @@ const CompleteProfileScreen = ({ navigation }) => {
       const result = await updateUserProfile(updates);
 
       if (result.success) {
-        Alert.alert('Success', 'Your profile has been updated!', [
-          {
-            text: 'OK',
-            onPress: () => {
-
-
-            },
-          },
-        ]);
+        showSuccess('Your profile has been updated!');
       } else {
-        Alert.alert('Error', result.error || 'Failed to update profile');
+        showError(result.error || 'Failed to update profile');
       }
     } catch (error) {
-      logger.error('Error updating profile:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      showError('Failed to update profile. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSkip = () => {
-    Alert.alert(
-      'Skip Profile Setup',
-      'You can complete your profile later from the Profile tab.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Skip',
-          onPress: async () => {
-            await updateUserProfile({ profileComplete: true });
-          },
+    Alert.alert('Skip Profile Setup', 'You can complete your profile later from the Profile tab.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Skip',
+        onPress: async () => {
+          await updateUserProfile({ profileComplete: true });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -157,9 +145,7 @@ const CompleteProfileScreen = ({ navigation }) => {
         {}
         <View style={styles.header}>
           <Icon name="account-circle" size={80} color={theme.colors.primary} />
-          <Text style={[styles.title, { color: theme.colors.text }]}>
-            Complete Your Profile
-          </Text>
+          <Text style={[styles.title, { color: theme.colors.text }]}>Complete Your Profile</Text>
           <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
             Help us personalize your experience
           </Text>
@@ -169,11 +155,14 @@ const CompleteProfileScreen = ({ navigation }) => {
         <View style={[styles.formContainer, { backgroundColor: theme.colors.surface }]}>
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>
-              Phone Number *
-            </Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Phone Number *</Text>
             <View style={[styles.input, { borderColor: theme.colors.border }]}>
-              <Icon name="phone" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="phone"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.textInput, { color: theme.colors.text }]}
                 placeholder="Enter your phone number"
@@ -188,11 +177,14 @@ const CompleteProfileScreen = ({ navigation }) => {
           {}
           {userProfile?.role === 'recipient' && (
             <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: theme.colors.text }]}>
-                Household Size *
-              </Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Household Size *</Text>
               <View style={[styles.input, { borderColor: theme.colors.border }]}>
-                <Icon name="family-restroom" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+                <Icon
+                  name="family-restroom"
+                  size={20}
+                  color={theme.colors.textSecondary}
+                  style={styles.inputIcon}
+                />
                 <TextInput
                   style={[styles.textInput, { color: theme.colors.text }]}
                   placeholder="Number of people in your household"
@@ -207,11 +199,14 @@ const CompleteProfileScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputContainer}>
-            <Text style={[styles.label, { color: theme.colors.text }]}>
-              Location *
-            </Text>
+            <Text style={[styles.label, { color: theme.colors.text }]}>Location *</Text>
             <View style={[styles.input, { borderColor: theme.colors.border }]}>
-              <Icon name="location-on" size={20} color={theme.colors.textSecondary} style={styles.inputIcon} />
+              <Icon
+                name="location-on"
+                size={20}
+                color={theme.colors.textSecondary}
+                style={styles.inputIcon}
+              />
               <TextInput
                 style={[styles.textInput, { color: theme.colors.text }]}
                 placeholder="Enter your address"
@@ -247,11 +242,7 @@ const CompleteProfileScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           {}
-          <TouchableOpacity
-            style={styles.skipButton}
-            onPress={handleSkip}
-            disabled={isLoading}
-          >
+          <TouchableOpacity style={styles.skipButton} onPress={handleSkip} disabled={isLoading}>
             <Text style={[styles.skipButtonText, { color: theme.colors.textSecondary }]}>
               Skip for now
             </Text>
@@ -353,6 +344,3 @@ const styles = StyleSheet.create({
 });
 
 export default CompleteProfileScreen;
-
-
-
