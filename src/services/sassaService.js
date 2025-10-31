@@ -1,6 +1,4 @@
 import {
-import logger from '../utils/logger';
-
   collection,
   addDoc,
   getDocs,
@@ -8,14 +6,13 @@ import logger from '../utils/logger';
   where,
   orderBy,
   Timestamp,
-  limit
+  limit,
 } from 'firebase/firestore';
+import logger from '../utils/logger';
 import { db } from '../config/firebase';
-
 
 export const submitSassaCheck = async (userId, applicationData) => {
   try {
-
     const eligibility = calculateEligibility(applicationData);
 
     const application = {
@@ -47,13 +44,12 @@ export const submitSassaCheck = async (userId, applicationData) => {
   }
 };
 
-
 export const getUserSassaApplications = async (userId) => {
   try {
     const q = query(
       collection(db, 'sassaApplications'),
       where('userId', '==', userId),
-      orderBy('checkedAt', 'desc')
+      orderBy('checkedAt', 'desc'),
     );
 
     const querySnapshot = await getDocs(q);
@@ -75,14 +71,13 @@ export const getUserSassaApplications = async (userId) => {
   }
 };
 
-
 export const getCurrentSassaStatus = async (userId) => {
   try {
     const q = query(
       collection(db, 'sassaApplications'),
       where('userId', '==', userId),
       orderBy('checkedAt', 'desc'),
-      limit(1)
+      limit(1),
     );
 
     const querySnapshot = await getDocs(q);
@@ -93,7 +88,6 @@ export const getCurrentSassaStatus = async (userId) => {
 
     const doc = querySnapshot.docs[0];
     const data = doc.data();
-
 
     const expiresAt = data.expiresAt?.toDate();
     const isExpired = expiresAt && expiresAt < new Date();
@@ -111,13 +105,11 @@ export const getCurrentSassaStatus = async (userId) => {
   }
 };
 
-
 function calculateEligibility(data) {
   const { monthlyIncome, dependents, employmentStatus } = data;
 
   let score = 0;
   let reasons = [];
-
 
   const incomeThreshold = 4000;
   const income = parseFloat(monthlyIncome) || 0;
@@ -133,7 +125,6 @@ function calculateEligibility(data) {
     reasons.push('Low income');
   }
 
-
   if (employmentStatus === 'unemployed') {
     score += 30;
     reasons.push('Currently unemployed');
@@ -142,25 +133,26 @@ function calculateEligibility(data) {
     reasons.push('Self-employed with irregular income');
   }
 
-
   const numDependents = parseInt(dependents) || 0;
   if (numDependents > 0) {
     score += Math.min(numDependents * 5, 30);
     reasons.push(`${numDependents} dependent(s)`);
   }
 
-
   let status, notes;
 
   if (score >= 70) {
     status = 'eligible';
-    notes = 'You appear to meet the criteria for SASSA assistance. Please visit your nearest SASSA office with your ID and proof of income for verification.';
+    notes =
+      'You appear to meet the criteria for SASSA assistance. Please visit your nearest SASSA office with your ID and proof of income for verification.';
   } else if (score >= 40) {
     status = 'potentially_eligible';
-    notes = 'You may qualify for SASSA assistance. We recommend visiting your nearest SASSA office for a full assessment.';
+    notes =
+      'You may qualify for SASSA assistance. We recommend visiting your nearest SASSA office for a full assessment.';
   } else {
     status = 'not_eligible';
-    notes = 'Based on the information provided, you may not qualify for SASSA grants. However, you can still use NourishNet to find food donations. For an official assessment, visit your nearest SASSA office.';
+    notes =
+      'Based on the information provided, you may not qualify for SASSA grants. However, you can still use NourishNet to find food donations. For an official assessment, visit your nearest SASSA office.';
   }
 
   return {
@@ -170,5 +162,3 @@ function calculateEligibility(data) {
     notes,
   };
 }
-
-

@@ -1,176 +1,74 @@
-import {
 import logger from '../utils/logger';
+import { sendPushNotification } from './notificationService';
+import { createAlert } from './alertsService';
+import { FirebaseChatRepository } from '../domain/repository/ChatRepository';
 
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  Timestamp,
-  doc,
-  updateDoc
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
-
+const repo = new FirebaseChatRepository();
 
 export const sendMessage = async (chatId, messageData) => {
   try {
-    const message = {
-      ...messageData,
-      chatId,
-      createdAt: Timestamp.now(),
-      read: false,
-    };
+    const sent = await repo.sendMessage(chatId, messageData);
 
-    const docRef = await addDoc(collection(db, 'messages'), message);
+    if (messageData.receiverId && messageData.receiverId !== messageData.senderId) {
+      await sendPushNotification(messageData.receiverId, 'New Message', messageData.text, {
+        chatId,
+        type: 'message',
+        donationId: messageData.donationId,
+      });
 
-    return {
-      id: docRef.id,
-      ...message,
-    };
+      try {
+        await createAlert(messageData.receiverId, {
+          type: 'message',
+          title: `New message from ${messageData.senderName}`,
+          message: messageData.text,
+          donationId: messageData.donationId,
+          chatId: chatId,
+          senderId: messageData.senderId,
+        });
+      } catch (alertError) {
+        logger.error('Error creating message alert:', alertError);
+      }
+    }
+
+    return sent;
   } catch (error) {
     logger.error('Error sending message:', error);
     throw error;
   }
 };
 
-
 export const getChatMessages = async (chatId) => {
   try {
-    const q = query(
-      collection(db, 'messages'),
-      where('chatId', '==', chatId),
-      orderBy('createdAt', 'asc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    const messages = [];
-
-    querySnapshot.forEach((doc) => {
-      messages.push({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().createdAt?.toDate() || new Date(),
-      });
-    });
-
-    return messages;
+    return await repo.getMessages(chatId);
   } catch (error) {
     logger.error('Error getting messages:', error);
     throw error;
   }
 };
 
-
-export const subscribeToMessages = (chatId, callback) => {
+export const subscribeToMessages = (chatId, callback, errorCallback) => {
   try {
-    const q = query(
-      collection(db, 'messages'),
-      where('chatId', '==', chatId),
-      orderBy('createdAt', 'asc')
-    );
-
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const messages = [];
-      querySnapshot.forEach((doc) => {
-        messages.push({
-          id: doc.id,
-          ...doc.data(),
-          timestamp: doc.data().createdAt?.toDate() || new Date(),
-        });
-      });
-      callback(messages);
-    });
-
-    return unsubscribe;
+    return repo.subscribeMessages(chatId, callback, errorCallback);
   } catch (error) {
     logger.error('Error subscribing to messages:', error);
     throw error;
   }
 };
 
-
 export const getUserChats = async (userId) => {
   try {
-
-    const q = query(
-      collection(db, 'messages'),
-      where('senderId', '==', userId),
-      orderBy('createdAt', 'desc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    const chatMap = new Map();
-
-    querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      const chatId = data.chatId;
-
-      if (!chatMap.has(chatId)) {
-        chatMap.set(chatId, {
-          chatId,
-          lastMessage: data.text,
-          lastMessageTime: data.createdAt?.toDate() || new Date(),
-          donationId: chatId,
-        });
-      }
-    });
-
-
-    const q2 = query(
-      collection(db, 'messages'),
-      where('receiverId', '==', userId),
-      orderBy('createdAt', 'desc')
-    );
-
-    const querySnapshot2 = await getDocs(q2);
-
-    querySnapshot2.forEach((doc) => {
-      const data = doc.data();
-      const chatId = data.chatId;
-
-      if (!chatMap.has(chatId)) {
-        chatMap.set(chatId, {
-          chatId,
-          lastMessage: data.text,
-          lastMessageTime: data.createdAt?.toDate() || new Date(),
-          donationId: chatId,
-        });
-      }
-    });
-
-    return Array.from(chatMap.values());
+    return await repo.getUserChats(userId);
   } catch (error) {
     logger.error('Error getting user chats:', error);
     throw error;
   }
 };
 
-
 export const markMessagesAsRead = async (chatId, userId) => {
   try {
-    const q = query(
-      collection(db, 'messages'),
-      where('chatId', '==', chatId),
-      where('receiverId', '==', userId),
-      where('read', '==', false)
-    );
-
-    const querySnapshot = await getDocs(q);
-
-    const updatePromises = [];
-    querySnapshot.forEach((document) => {
-      const docRef = doc(db, 'messages', document.id);
-      updatePromises.push(updateDoc(docRef, { read: true }));
-    });
-
-    await Promise.all(updatePromises);
+    await repo.markAsRead(chatId, userId);
   } catch (error) {
     logger.error('Error marking messages as read:', error);
     throw error;
   }
 };
-
-
