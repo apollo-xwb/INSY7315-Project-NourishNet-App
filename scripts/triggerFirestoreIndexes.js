@@ -1,9 +1,9 @@
 /**
  * Firestore Index Trigger Script
- * 
+ *
  * This script triggers all Firestore queries used in the app to generate
  * the index creation links. Run this to get all the links at once.
- * 
+ *
  * Usage: node scripts/triggerFirestoreIndexes.js
  */
 
@@ -12,13 +12,13 @@ const { getFirestore, collection, query, where, orderBy, getDocs } = require('fi
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBFzJXSF8YwnnXjEBjw7NxDOLL7w4JxXjA",
-  authDomain: "mealsonwheels-275c2.firebaseapp.com",
-  projectId: "mealsonwheels-275c2",
-  storageBucket: "mealsonwheels-275c2.firebasestorage.app",
-  messagingSenderId: "834728778135",
-  appId: "1:834728778135:web:2535ee06df78b7f3144cd2",
-  measurementId: "G-209E40JXX7"
+  apiKey: 'AIzaSyBFzJXSF8YwnnXjEBjw7NxDOLL7w4JxXjA',
+  authDomain: 'mealsonwheels-275c2.firebaseapp.com',
+  projectId: 'mealsonwheels-275c2',
+  storageBucket: 'mealsonwheels-275c2.firebasestorage.app',
+  messagingSenderId: '834728778135',
+  appId: '1:834728778135:web:2535ee06df78b7f3144cd2',
+  measurementId: 'G-209E40JXX7',
 };
 
 // Initialize Firebase
@@ -35,7 +35,7 @@ const TEST_CHAT_ID = 'test-chat-123';
 async function triggerQueries() {
   const results = {
     successful: [],
-    needsIndex: []
+    needsIndex: [],
   };
 
   // Query 1: Get all available donations (status + createdAt)
@@ -44,7 +44,7 @@ async function triggerQueries() {
     const q1 = query(
       collection(db, 'donations'),
       where('status', '==', 'available'),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     await getDocs(q1);
     console.log('   ✅ Success - Index exists\n');
@@ -58,7 +58,7 @@ async function triggerQueries() {
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
           query: 'Get available donations (status + createdAt)',
-          link: match[0]
+          link: match[0],
         });
       }
     } else {
@@ -67,12 +67,12 @@ async function triggerQueries() {
   }
 
   // Query 2: Get user's posted donations (userId + createdAt)
-  console.log('2️⃣  Testing: Get user\'s donations (userId + createdAt DESC)');
+  console.log("2️⃣  Testing: Get user's donations (userId + createdAt DESC)");
   try {
     const q2 = query(
       collection(db, 'donations'),
       where('userId', '==', TEST_USER_ID),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     await getDocs(q2);
     console.log('   ✅ Success - Index exists\n');
@@ -85,8 +85,8 @@ async function triggerQueries() {
         console.log('   🔗 Create index here:');
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
-          query: 'Get user\'s donations (userId + createdAt)',
-          link: match[0]
+          query: "Get user's donations (userId + createdAt)",
+          link: match[0],
         });
       }
     } else {
@@ -100,7 +100,7 @@ async function triggerQueries() {
     const q3 = query(
       collection(db, 'donations'),
       where('claimedBy', '==', TEST_USER_ID),
-      orderBy('claimedAt', 'desc')
+      orderBy('claimedAt', 'desc'),
     );
     await getDocs(q3);
     console.log('   ✅ Success - Index exists\n');
@@ -114,7 +114,7 @@ async function triggerQueries() {
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
           query: 'Get claimed donations (claimedBy + claimedAt)',
-          link: match[0]
+          link: match[0],
         });
       }
     } else {
@@ -128,7 +128,7 @@ async function triggerQueries() {
     const q4 = query(
       collection(db, 'messages'),
       where('chatId', '==', TEST_CHAT_ID),
-      orderBy('createdAt', 'asc')
+      orderBy('createdAt', 'asc'),
     );
     await getDocs(q4);
     console.log('   ✅ Success - Index exists\n');
@@ -142,7 +142,7 @@ async function triggerQueries() {
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
           query: 'Get chat messages (chatId + createdAt)',
-          link: match[0]
+          link: match[0],
         });
       }
     } else {
@@ -151,12 +151,12 @@ async function triggerQueries() {
   }
 
   // Query 5: Get user's sent messages (senderId + createdAt)
-  console.log('5️⃣  Testing: Get user\'s sent messages (senderId + createdAt DESC)');
+  console.log("5️⃣  Testing: Get user's sent messages (senderId + createdAt DESC)");
   try {
     const q5 = query(
       collection(db, 'messages'),
       where('senderId', '==', TEST_USER_ID),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     await getDocs(q5);
     console.log('   ✅ Success - Index exists\n');
@@ -169,8 +169,8 @@ async function triggerQueries() {
         console.log('   🔗 Create index here:');
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
-          query: 'Get user\'s sent messages (senderId + createdAt)',
-          link: match[0]
+          query: "Get user's sent messages (senderId + createdAt)",
+          link: match[0],
         });
       }
     } else {
@@ -179,12 +179,12 @@ async function triggerQueries() {
   }
 
   // Query 6: Get user's received messages (receiverId + createdAt)
-  console.log('6️⃣  Testing: Get user\'s received messages (receiverId + createdAt DESC)');
+  console.log("6️⃣  Testing: Get user's received messages (receiverId + createdAt DESC)");
   try {
     const q6 = query(
       collection(db, 'messages'),
       where('receiverId', '==', TEST_USER_ID),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     await getDocs(q6);
     console.log('   ✅ Success - Index exists\n');
@@ -197,8 +197,8 @@ async function triggerQueries() {
         console.log('   🔗 Create index here:');
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
-          query: 'Get user\'s received messages (receiverId + createdAt)',
-          link: match[0]
+          query: "Get user's received messages (receiverId + createdAt)",
+          link: match[0],
         });
       }
     } else {
@@ -212,7 +212,7 @@ async function triggerQueries() {
     const q7 = query(
       collection(db, 'sassaApplications'),
       where('userId', '==', TEST_USER_ID),
-      orderBy('checkedAt', 'desc')
+      orderBy('checkedAt', 'desc'),
     );
     await getDocs(q7);
     console.log('   ✅ Success - Index exists\n');
@@ -226,7 +226,7 @@ async function triggerQueries() {
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
           query: 'Get SASSA applications (userId + checkedAt)',
-          link: match[0]
+          link: match[0],
         });
       }
     } else {
@@ -240,7 +240,7 @@ async function triggerQueries() {
     const q8 = query(
       collection(db, 'alerts'),
       where('userId', '==', TEST_USER_ID),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     await getDocs(q8);
     console.log('   ✅ Success - Index exists\n');
@@ -254,7 +254,7 @@ async function triggerQueries() {
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
           query: 'Get user alerts (userId + createdAt)',
-          link: match[0]
+          link: match[0],
         });
       }
     } else {
@@ -269,7 +269,7 @@ async function triggerQueries() {
       collection(db, 'alerts'),
       where('userId', '==', TEST_USER_ID),
       where('read', '==', false),
-      orderBy('createdAt', 'desc')
+      orderBy('createdAt', 'desc'),
     );
     await getDocs(q9);
     console.log('   ✅ Success - Index exists\n');
@@ -283,7 +283,7 @@ async function triggerQueries() {
         console.log('   ' + match[0] + '\n');
         results.needsIndex.push({
           query: 'Get unread alerts (userId + read + createdAt)',
-          link: match[0]
+          link: match[0],
         });
       }
     } else {
@@ -317,8 +317,7 @@ async function triggerQueries() {
 }
 
 // Run the script
-triggerQueries().catch(error => {
+triggerQueries().catch((error) => {
   console.error('❌ Fatal error:', error);
   process.exit(1);
 });
-
