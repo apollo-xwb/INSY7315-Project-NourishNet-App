@@ -182,11 +182,18 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
-      // Clear user state first to trigger navigation change
+      // Sign out from Firebase first
+      await signOut(auth);
+      // Clear user state to trigger navigation change
       setUser(null);
       setUserProfile(null);
-      // Then sign out from Firebase
-      await signOut(auth);
+      // Clear any cached auth data
+      try {
+        await AsyncStorage.removeItem('@nourishnet_user');
+        await AsyncStorage.removeItem('@nourishnet_profile');
+      } catch (storageError) {
+        logger.warn('Error clearing storage on logout:', storageError);
+      }
       logger.log('Logout successful');
       return { success: true };
     } catch (error) {
@@ -195,6 +202,12 @@ export const AuthProvider = ({ children }) => {
       // Ensure state is cleared even if signOut fails
       setUser(null);
       setUserProfile(null);
+      try {
+        await AsyncStorage.removeItem('@nourishnet_user');
+        await AsyncStorage.removeItem('@nourishnet_profile');
+      } catch (storageError) {
+        logger.warn('Error clearing storage on logout:', storageError);
+      }
       return { success: false, error: error.message };
     }
   };
