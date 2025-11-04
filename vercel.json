@@ -1,6 +1,19 @@
 {
+  "buildCommand": "npm ci --legacy-peer-deps && npm run build:web",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci --legacy-peer-deps",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
   ]
 }
-

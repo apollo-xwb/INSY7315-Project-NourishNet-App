@@ -133,3 +133,4 @@ firebase-debug.*.log
 .netlify
 
 
+VERCEL_DEPLOYMENT.md
