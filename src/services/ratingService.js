@@ -31,23 +31,10 @@ export const submitRating = async (ratingData) => {
     const ratingRef = doc(collection(db, 'ratings'));
     await setDoc(ratingRef, ratingDoc);
 
-    const userRef = doc(db, 'users', ratedUserId);
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      const currentRating = userData.averageRating || 0;
-      const totalRatings = userData.totalRatings || 0;
-
-      const newTotalRatings = totalRatings + 1;
-      const newAverageRating = (currentRating * totalRatings + rating) / newTotalRatings;
-
-      await updateDoc(userRef, {
-        averageRating: newAverageRating,
-        totalRatings: newTotalRatings,
-        updatedAt: Timestamp.now(),
-      });
-    }
+    // Note: User rating stats are calculated from ratings collection queries
+    // Updating user document directly requires admin permissions or Cloud Functions
+    // For now, we skip direct user document updates to avoid permission errors
+    // Stats can be calculated on-demand from ratings collection
 
     logger.info('Rating submitted successfully');
     return { success: true, ratingId: ratingRef.id };

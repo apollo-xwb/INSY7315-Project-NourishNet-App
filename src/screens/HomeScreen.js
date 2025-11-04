@@ -264,6 +264,9 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.headerIconButton}
                   onPress={() => navigation.navigate('DonationHistory')}
                   accessibilityLabel="Activity Center"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  delayPressIn={0}
+                  activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                     <Icon name="inventory" size={24} color={theme.colors.surface} />
@@ -274,10 +277,13 @@ const HomeScreen = ({ navigation }) => {
                   style={styles.headerIconButton}
                   onPress={() => navigation.navigate('Alerts')}
                   accessibilityLabel="Notifications"
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  delayPressIn={0}
+                  activeOpacity={0.7}
                 >
                   <Icon name="notifications" size={24} color={theme.colors.surface} />
                   {unreadAlertsCount > 0 && (
-                    <View style={{ position: 'absolute', top: -10, right: -10 }}>
+                    <View style={{ position: 'absolute', top: -10, right: -10, pointerEvents: 'none' }}>
                       <Badge variant="error" size="small">
                         {unreadAlertsCount}
                       </Badge>
