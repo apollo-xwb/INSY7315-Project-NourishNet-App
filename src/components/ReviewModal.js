@@ -69,13 +69,43 @@ const ReviewModal = ({ visible, onClose, claim, reviewerUserId, onReviewSubmitte
     try {
       // Use claim.donationId (the actual donation ID)
       const donationId = claim.donationId || claim.id;
+      // Expanded claims have userId from the donation 
+      const donorId = claim.donorId || claim.userId;
+      
+      // Validate required fields
+      if (!donationId) {
+        showError('Missing donation ID. Cannot submit review.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!donorId) {
+        showError('Missing donor information. Cannot submit review.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (!reviewerUserId) {
+        showError('You must be logged in to submit a review.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      if (reviewerUserId === donorId) {
+        showError('You cannot review yourself.');
+        setIsSubmitting(false);
+        return;
+      }
+      
+      logger.info('Submitting review:', { donationId, donorId, reviewerId: reviewerUserId });
+      
       const result = await createReview({
         donationId: donationId,
-        donorId: claim.donorId || claim.userId,
+        donorId: donorId,
         reviewerId: reviewerUserId,
         ratings: ratings,
         comment: comment.trim(),
-        claimId: claim.id,
+        claimId: claim.claimId || claim.id,
       });
 
       if (result.success) {

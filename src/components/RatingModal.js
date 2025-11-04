@@ -39,6 +39,31 @@ const RatingModal = ({
     setSubmitting(true);
 
     try {
+      // Validate required fields
+      if (!donation?.id) {
+        showError('Missing donation information. Cannot submit rating.');
+        setSubmitting(false);
+        return;
+      }
+      
+      if (!ratedUser?.id) {
+        showError('Missing user information. Cannot submit rating.');
+        setSubmitting(false);
+        return;
+      }
+      
+      if (!raterUserId) {
+        showError('You must be logged in to submit a rating.');
+        setSubmitting(false);
+        return;
+      }
+      
+      if (raterUserId === ratedUser.id) {
+        showError('You cannot rate yourself.');
+        setSubmitting(false);
+        return;
+      }
+      
       const result = await submitRating({
         donationId: donation.id,
         ratedUserId: ratedUser.id,
