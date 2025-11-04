@@ -67,8 +67,10 @@ const ReviewModal = ({ visible, onClose, claim, reviewerUserId, onReviewSubmitte
 
     setIsSubmitting(true);
     try {
+      // Use claim.donationId (the actual donation ID)
+      const donationId = claim.donationId || claim.id;
       const result = await createReview({
-        donationId: claim.id,
+        donationId: donationId,
         donorId: claim.donorId || claim.userId,
         reviewerId: reviewerUserId,
         ratings: ratings,
