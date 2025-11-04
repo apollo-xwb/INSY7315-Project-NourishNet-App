@@ -97,7 +97,14 @@ const ReviewModal = ({ visible, onClose, claim, reviewerUserId, onReviewSubmitte
         return;
       }
       
-      logger.info('Submitting review:', { donationId, donorId, reviewerId: reviewerUserId });
+      logger.info('Submitting review:', { 
+        donationId, 
+        donorId, 
+        reviewerId: reviewerUserId,
+        ratings: ratings,
+        hasRatings: !!ratings,
+        ratingsKeys: Object.keys(ratings || {})
+      });
       
       const result = await createReview({
         donationId: donationId,

@@ -16,6 +16,8 @@ import logger from '../utils/logger';
 
 export const submitRating = async (ratingData) => {
   try {
+    logger.info('submitRating called with:', JSON.stringify(ratingData, null, 2));
+    
     const { donationId, ratedUserId, raterUserId, rating, review, type } = ratingData;
 
     const ratingDoc = {
@@ -28,12 +30,10 @@ export const submitRating = async (ratingData) => {
       createdAt: Timestamp.now(),
     };
 
+    logger.info('Rating document to create:', JSON.stringify(ratingDoc, null, 2));
     const ratingRef = doc(collection(db, 'ratings'));
     await setDoc(ratingRef, ratingDoc);
 
-    // Note: User rating stats are calculated from ratings collection queries
-    // Updating user document directly requires admin permissions or Cloud Functions
-    // For now, we skip direct user document updates to avoid permission errors
     // Stats can be calculated on-demand from ratings collection
 
     logger.info('Rating submitted successfully');

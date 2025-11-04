@@ -132,8 +132,10 @@ service cloud.firestore {
       allow create: if isAuthenticated()
         && request.resource.data.raterUserId == request.auth.uid
         && request.resource.data.raterUserId != request.resource.data.ratedUserId
-        && request.resource.data.hasOwnProperty('donationId')
-        && request.resource.data.hasOwnProperty('rating');
+        && request.resource.data.donationId is string
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
       
       // Users can update their own ratings
       allow update: if isAuthenticated()
@@ -154,9 +156,10 @@ service cloud.firestore {
       allow create: if isAuthenticated()
         && request.resource.data.reviewerId == request.auth.uid
         && request.resource.data.reviewerId != request.resource.data.donorId
-        && request.resource.data.hasOwnProperty('donationId')
-        && request.resource.data.hasOwnProperty('donorId')
-        && request.resource.data.hasOwnProperty('ratings');
+        && request.resource.data.donationId is string
+        && request.resource.data.donorId is string
+        && request.resource.data.ratings is map
+        && request.resource.data.ratings.keys().hasAll(['punctuality', 'quality', 'communication', 'overall']);
       
       // Users can update their own reviews
       allow update: if isAuthenticated()

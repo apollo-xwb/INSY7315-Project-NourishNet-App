@@ -14,6 +14,8 @@ import { db } from '../config/firebase';
 
 export const createReview = async (reviewData) => {
   try {
+    logger.info('createReview called with:', JSON.stringify(reviewData, null, 2));
+    
     // Check if user has already reviewed this donation
     const existingReview = await hasUserReviewedDonation(
       reviewData.reviewerId,
@@ -43,6 +45,7 @@ export const createReview = async (reviewData) => {
       createdAt: Timestamp.now(),
     };
 
+    logger.info('Review document to create:', JSON.stringify(review, null, 2));
     const docRef = await addDoc(collection(db, 'reviews'), review);
 
     logger.info('Review created successfully:', docRef.id);
