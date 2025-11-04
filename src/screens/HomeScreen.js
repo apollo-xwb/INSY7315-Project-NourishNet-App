@@ -151,7 +151,6 @@ const HomeScreen = ({ navigation }) => {
         onPress={() => handleDonationPress(item)}
         accessibilityLabel={`${item.itemName} donation, ${distance}km away`}
         accessibilityRole="button"
-        delayPressIn={Platform.OS === 'web' ? 0 : undefined}
         activeOpacity={0.7}
       >
         {item.imageUrl || item.image ? (
@@ -267,7 +266,6 @@ const HomeScreen = ({ navigation }) => {
                   onPress={() => navigation.navigate('DonationHistory')}
                   accessibilityLabel="Activity Center"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  delayPressIn={0}
                   activeOpacity={0.7}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -280,7 +278,6 @@ const HomeScreen = ({ navigation }) => {
                   onPress={() => navigation.navigate('Alerts')}
                   accessibilityLabel="Notifications"
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  delayPressIn={0}
                   activeOpacity={0.7}
                 >
                   <Icon name="notifications" size={24} color={theme.colors.surface} />

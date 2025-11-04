@@ -110,7 +110,6 @@ const Button = ({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
-      delayPressIn={Platform.OS === 'web' ? 0 : undefined}
       {...rest}
     >
       {loading ? (
