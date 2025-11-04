@@ -1,6 +1,6 @@
 // Reusable button component with variants and loading states
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import Icon from '../../utils/IconWrapper';
 const Button = ({
@@ -110,6 +110,7 @@ const Button = ({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
+      delayPressIn={Platform.OS === 'web' ? 0 : undefined}
       {...rest}
     >
       {loading ? (

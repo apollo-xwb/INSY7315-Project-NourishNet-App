@@ -151,6 +151,8 @@ const HomeScreen = ({ navigation }) => {
         onPress={() => handleDonationPress(item)}
         accessibilityLabel={`${item.itemName} donation, ${distance}km away`}
         accessibilityRole="button"
+        delayPressIn={Platform.OS === 'web' ? 0 : undefined}
+        activeOpacity={0.7}
       >
         {item.imageUrl || item.image ? (
           <Image source={{ uri: item.imageUrl || item.image }} style={styles.donationImage} />
