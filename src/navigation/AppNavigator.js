@@ -24,6 +24,8 @@ import ChatsListScreen from '../screens/ChatsListScreen';
 import MyClaimsScreen from '../screens/MyClaimsScreen';
 import DonationHistoryScreen from '../screens/DonationHistoryScreen';
 import CompleteProfileScreen from '../screens/CompleteProfileScreen';
+import EmployeeLoginScreen from '../screens/EmployeeLoginScreen';
+import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -172,6 +174,23 @@ const AppNavigator = () => {
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen
+              name="EmployeeLogin"
+              component={EmployeeLoginScreen}
+              options={{ headerShown: true, title: 'Employee Login', headerStyle: { backgroundColor: '#84bd00' }, headerTintColor: '#FFFFFF' }}
+            />
+            {/*employee (non-auth) access */}
+            <Stack.Screen
+              name="AdminDashboard"
+              component={AdminDashboardScreen}
+              options={{
+                headerShown: true,
+                title: 'Admin Dashboard',
+                headerStyle: { backgroundColor: '#84bd00' },
+                headerTintColor: '#FFFFFF',
+                headerBackTitle: 'Back',
+              }}
+            />
           </>
         ) : !userProfile?.profileComplete ||
           !userProfile?.phone ||
@@ -242,6 +261,18 @@ const AppNavigator = () => {
               options={{
                 headerShown: true,
                 title: t('alerts'),
+                headerStyle: { backgroundColor: '#84bd00' },
+                headerTintColor: '#FFFFFF',
+                headerBackTitle: 'Back',
+              }}
+            />
+            {/* AdminDashboard also available post-auth*/}
+            <Stack.Screen
+              name="AdminDashboard"
+              component={AdminDashboardScreen}
+              options={{
+                headerShown: true,
+                title: 'Admin Dashboard',
                 headerStyle: { backgroundColor: '#84bd00' },
                 headerTintColor: '#FFFFFF',
                 headerBackTitle: 'Back',

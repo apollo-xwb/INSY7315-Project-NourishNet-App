@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Image, Platform } from 'react-native';
+import { galleryImages } from '../assets/gallery/index';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import logger from '../utils/logger';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -62,9 +63,28 @@ const OnboardingScreen = ({ navigation, route }) => {
     i18n.changeLanguage(lang);
   };
 
+  // Slideshow sizing (wide banner style)
+  const slideWidth = Math.min(1100, Math.round(screenWidth * 0.9));
+  const slideHeight = Math.max(260, Math.round(slideWidth * 0.42));
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const slideTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (!galleryImages || galleryImages.length === 0) return;
+    slideTimerRef.current = setInterval(() => {
+      setGalleryIndex((prev) => (prev + 1) % galleryImages.length);
+    }, 4000);
+    return () => {
+      if (slideTimerRef.current) clearInterval(slideTimerRef.current);
+    };
+  }, [galleryImages?.length]);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.primary }]}>
-      <View style={styles.carouselContainer}>
+      <ScrollView
+        style={styles.carouselContainer}
+        contentContainerStyle={{ alignItems: 'center', paddingVertical: 16 }}
+      >
         <CarouselWrapper
           data={slides}
           renderItem={renderItem}
@@ -72,7 +92,36 @@ const OnboardingScreen = ({ navigation, route }) => {
           itemWidth={screenWidth * 0.8}
           loop
         />
-      </View>
+       
+        {galleryImages && galleryImages.length > 0 && (
+          <View style={{ marginTop: 24, width: '90%', maxWidth: 1200, alignItems: 'center' }}>
+            <Text style={{ color: theme.colors.surface, fontWeight: '700', marginBottom: 8, fontSize: 16 }}>Gallery</Text>
+            <View style={{ width: slideWidth }}>
+              <Image
+                key={galleryIndex}
+                source={galleryImages[galleryIndex]}
+                style={{ width: slideWidth, height: slideHeight, borderRadius: 14 }}
+                resizeMode="cover"
+                accessibilityLabel={`gallery-image-${galleryIndex + 1}`}
+              />
+              <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8 }}>
+                {galleryImages.map((_, i) => (
+                  <View
+                    key={`dot-${i}`}
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      marginHorizontal: 4,
+                      backgroundColor: i === galleryIndex ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.4)'
+                    }}
+                  />
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+      </ScrollView>
 
       <View style={styles.bottomContainer}>
         <View style={styles.languageSelector}>
@@ -127,8 +176,6 @@ const styles = StyleSheet.create({
   },
   carouselContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     width: '100%',
   },
   slide: {

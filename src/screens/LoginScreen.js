@@ -124,6 +124,11 @@ const LoginScreen = ({ navigation }) => {
             </Text>
           </View>
 
+          {/* Employee access link (hidden entry) */}
+          <TouchableOpacity onPress={() => navigation.navigate('EmployeeLogin')} accessibilityLabel="Employee access" style={{ alignSelf: 'center', marginTop: 8 }}>
+            <Text style={{ color: theme.colors.textSecondary, textDecorationLine: 'underline' }}>Employee access</Text>
+          </TouchableOpacity>
+
           {/* Form container: Contains all login inputs and buttons */}
           <View style={[styles.formContainer, { backgroundColor: theme.colors.surface }]}>
             {/* Form title */}

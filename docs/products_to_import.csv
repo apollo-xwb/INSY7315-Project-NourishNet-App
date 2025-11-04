@@ -1,0 +1,12 @@
+name,description,quantity,unit,category,expiry_days
+Fresh Bread,Daily baked bread loaves,50,loaves,Bakery,2
+Canned Beans,High-protein canned beans,120,cans,Pantry,365
+Rice 5kg,White long-grain rice bag,30,bags,Pantry,540
+Apples,Seasonal fresh apples,80,kg,Produce,14
+Milk 1L,Fresh dairy milk 1L cartons,60,cartons,Dairy,10
+Cooking Oil 2L,Sunflower cooking oil,25,bottles,Pantry,720
+Pasta 500g,Dry spaghetti packs,100,packs,Pantry,720
+Tomato Sauce,500ml tomato sauce bottles,40,bottles,Pantry,540
+Bananas,Ripe bananas for immediate use,30,kg,Produce,7
+Eggs Dozen,Free-range eggs (12 pack),45,cartons,Dairy,21
+
