@@ -16,22 +16,49 @@ Introduction Work Integrated learning (WIL) a crucial opportunity for students t
 
 Skills Learnt Throughout this journey, I create some part of the user interface like menu items to show you my practical skills of my code with my project manager with an example to understand the illustration during WIL.
 
-Technical Skills and Industry Practices Agile Development and SDLC: I learned how to create a login and logout in another semester to show my contribution in the project we create together of course he gives me some advice to develop every part 
+Technical Skills and Industry Practices Agile Development and SDLC: I learned how to create a login and logout in another semester to show my contribution in the project we create together of course he gives me some advice to develop every part like homepage, loginpage, patterns, style.css and menu. These parts we create together show me I have to learn more in design application for my future perspective and to have ability in my coding. He learned well how to structure sprint reviews with retrospectives, which in turn helped me refine my ability when it comes to managing scope and timelines.
 
 Full-Stack Mobile Development:
-
+Developing the core features in the app with him I gain more experience in React Native when developing login, post, basic information of the categories, description, verification QR code and views of the presentation of the donations we create together. When developing the donation, posting, claim management alongside with Tshwanelo give me the time to handle cross-platform complexities like IOS, Android and Web.
 
 Cloud Backend Integration:
+Using GitHub actions, he established a CI/CD pipeline to automate the quality checks for code and ran unit test (Jest). His responsibility was to test the coverage for all the business logic and prevent regression.
 
 Quality Assurance & DevOps:
+Of course he made sure to follow professional Git branching strategies like feature branches, code reviews and pull requests to efficiently collaborate with my team whilst using a shared codebase.
+
+
 
 Version Control:
 
 Role in the team:
 
+Team Dynamic and Reporting
+Out team consisted of myself as the Mobile/UI and Tshwanelo Ramongalo as the PM/full-stack developer. Together we ensured to maintain a codebase and experience that is dynamic, complementary and collaborative. I really excelled on the visual design aspect which gave me the true freedom to focus on the backend . We reported directly to Stephen Underwood who heads the media and donations team at U-Turn for the direction of the project and obtaining feedback from the clients perspective.
+
+My role and my contribution was assigned to be The Mobile and UI. The responsibility of my role is allowing me to express in the developement in the app.
+
 Leardership Contribution:
+The facilitation of all the sprint activities like planning and retrospectives and ensuring to assign tasks based on our skill-sets and provide guidance on a technical level for the backend integration and security functions. Through this he ensured that he adhered to the Agile methodology.
 
 Team Success
+Through his contribution in the prioritization of documentation like the meeting minutes and technical architecture as well as removing the technical blockers proactively which in turn allowed me to focus more on the UI/UX development. Through my work we ensure an application that is not only of high quality but has a secure foundation.
+
+Research, Technology and the Presentation of Information In order to overcome some of the more complex technical challenges, finding accurate and relevant information played a major role.
+
+Scenario: Resolving Cross-Platform Map Integration he was tasked to handle the implementation of an interactive map that would work seamlessly across both mobile and web platforms which was challenging as the react native maps feature isn't supported on the web.
+
+Aspect Details of Information Use Technology Used Presentation of Information Information Sought How to replace React Native Maps functionality on the web platform, specifically using the Google Maps API. Google Search, Expo Documentation, Stack Overflow. Presented a technical proposal to the team myself detailing the recommended @react-google-maps/api library, its pros/cons, and estimated effort, followed by a proof-of-concept branch. Information Found Documentation for Google Maps Platform API key setup, usage limits, and integration guides for the @react-google-maps/api library. Google Maps Platform Documentation and GitHub for code examples. he created the final implementation and documented the API key setup and configuration steps in the Systems Manual for U-Turn's IT staff.
+
+Scenario: Designing Secure Data Access he was expected to design robust security rules to ensure user data privacy and prevent unauthorized modification of donations, a critical client requirement.
+
+He was also in charge of designing the security rules to make sure that data privacy is intact and that unauthorized changes to the donations wasn't possible which was a critical requirement from the client. Information Found: Official Firebase Security Rules documentation, best practices from security blogs (Firebase, 2025), and the OWASP Mobile Top 10 for mobile security guidelines. (OWASP, 2025)
+
+Technology Used: he used the Firebase emulator suite to handle the automated testing for the security rules against the multiple user roles and then he made use of the firebase console to test interactively.
+
+Presentation: Based on the firebase rules document, he also create a thorough security review document to hand to the client which was aimed at summarizing the access controls such as only the original donor being able to edit a donation, which was then presented to the clients IT Intern, James Korkie.
+
+Personal Strengths and Weaknesses Personal Strengths:
 
 
 References:
@@ -45,5 +72,6 @@ Google (2025) Firebase Documentation. Available at: https://firebase.google.com/
 Google (2025) Cloud Firestore. Available at: https://firebase.google.com/docs/firestore (Accessed: 1 November 2025).
 
 ![Screenshot 2025-11-05 151757](https://github.com/user-attachments/assets/cf362370-78df-4af4-ab3f-1da9b7c0f3be)
+
 
 
