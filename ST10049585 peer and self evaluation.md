@@ -28,8 +28,10 @@ Quality Assurance & DevOps:
 Of course he made sure to follow professional Git branching strategies like feature branches, code reviews and pull requests to efficiently collaborate with my team whilst using a shared codebase.
 
 
-
 Version Control:
+he made sure to follow professional Git branching strategies like feature branches, code reviews and pull requests to efficiently collaborate with my team whilst using a shared codebase.
+
+Interpersonal & Management Skills Client Communication: he led weekly check-ins, translating technical concepts into accessible language for non-technical stakeholders (U-Turn Operations). he was expected to present feature demos and effectively gather and incorporate client feedback. Conflict Resolution: he facilitated discussions on contentious topics, such as the multi-claim vs. first-come-first-serve policy, ensuring the final decision balanced technical feasibility with client operational needs. Time Management & Prioritization: he managed parallel tasks across development, testing, and documentation, ensuring features were delivered on time for sprint deadlines despite unexpected technical blockers (e.g., web map integration).
 
 Role in the team:
 
@@ -83,12 +85,21 @@ For my improvement I have to get more experience for what to do with my knowloed
 
 Stakeholder Relationship
 
+Relationship with Stephen Underwood (Client Supervisor)
+Relationships flows smoothly. Stephen and his feedback was always clear and consistent in terms of us demoing the features and he had trust in our technical judgment, which allowed us to practice complete developmental autonomy.
+
+I want to learn more for improving the application like my leader did and I contribute well the devepment for the menu part. For another part I never did for the moment is the firebase because I want to practice like he did it.
 
 Relationship with WIL Coordinator
+he coordinator provided clear instructions on the academic deliverables and was available to clarify rubric criteria, ensuring I understood the requirements for the final submission.
 
+The coordinator aided in explaining the complex assessment structure and how best to go about it to ensure he do well and clarified many parts of the rubric criteria including deliverables and how they integrate into the assessment which helped toward the finall submission.
+The most part I contribute is the presentation of the application we did together but I have to be better for my future project.
+
+For our impact with my project manager (Tshwanelo Ramongalo) he complemented me by offering a firm technical foundation and acted like my mentor in terms of the backend logic and best practices for testing via code reviews and made sure that the environment that we shared together was a collaborative one.
 
 Conclusion
-
+For my WIL experience with U-Turn through The NourishNet app was the most part we create combine with our exchange ideas together to improve the project very successful of course with his guidances I coud not be here without him. I have more to learn from him like get a strategic project like him on day.
 
 References:
 
@@ -101,7 +112,6 @@ Google (2025) Firebase Documentation. Available at: https://firebase.google.com/
 Google (2025) Cloud Firestore. Available at: https://firebase.google.com/docs/firestore (Accessed: 1 November 2025).
 
 <img width="1187" height="562" alt="Screenshot 2025-11-05 151757" src="https://github.com/user-attachments/assets/4a281ecc-3d00-437b-b97a-f3ec0723eaaf" />
-
 
 
 
