@@ -170,15 +170,25 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = async () => {
-    // On web, use window.confirm for better compatibility
+    logger.log('handleLogout called');
+    
+    // On web, window.confirm for better compatibility
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const confirmed = window.confirm('Are you sure you want to logout?');
-      if (!confirmed) return;
+      if (!confirmed) {
+        logger.log('Logout cancelled by user');
+        return;
+      }
       
       logger.log('Logout confirmed, calling logout function');
-      const result = await logout();
-      if (!result.success) {
-        showError(result.error || 'Failed to logout');
+      try {
+        const result = await logout();
+        if (!result.success) {
+          showError(result.error || 'Failed to logout');
+        }
+      } catch (error) {
+        logger.error('Error during logout:', error);
+        showError('Failed to logout. Please try again.');
       }
       // On web, logout reloads the page
       return;
@@ -192,11 +202,16 @@ const ProfileScreen = ({ navigation }) => {
         style: 'destructive',
         onPress: async () => {
           logger.log('Logout confirmed, calling logout function');
-          const result = await logout();
-          if (result.success) {
-            showSuccess('You have been logged out successfully!');
-          } else {
-            showError(result.error || 'Failed to logout');
+          try {
+            const result = await logout();
+            if (result.success) {
+              showSuccess('You have been logged out successfully!');
+            } else {
+              showError(result.error || 'Failed to logout');
+            }
+          } catch (error) {
+            logger.error('Error during logout:', error);
+            showError('Failed to logout. Please try again.');
           }
         },
       },
@@ -241,7 +256,12 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={{ maxWidth, alignSelf: 'center', width: '100%' }}
+      contentContainerStyle={{ 
+        maxWidth, 
+        alignSelf: 'center', 
+        width: '100%',
+        paddingBottom: Platform.OS === 'web' ? 40 : 20, // Extra padding on web for mobile
+      }}
     >
       <View
         style={[
@@ -625,6 +645,8 @@ const ProfileScreen = ({ navigation }) => {
         onPress={handleLogout}
         accessibilityLabel={t('logout')}
         accessibilityRole="button"
+        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+        activeOpacity={0.7}
       >
         <Icon name="logout" size={20} color={theme.colors.surface} />
         <Text style={[styles.logoutText, { color: theme.colors.surface }]}>{t('logout')}</Text>
@@ -852,8 +874,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     margin: 16,
     paddingVertical: 16,
+    paddingHorizontal: 16,
+    minHeight: 48, //  minimum touch target size
     borderRadius: 8,
     gap: 8,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      WebkitTapHighlightColor: 'transparent',
+    }),
   },
   logoutText: {
     fontSize: 16,
