@@ -100,7 +100,9 @@ Google (2025) Firebase Documentation. Available at: https://firebase.google.com/
 
 Google (2025) Cloud Firestore. Available at: https://firebase.google.com/docs/firestore (Accessed: 1 November 2025).
 
-![Screenshot 2025-11-05 151757](https://github.com/user-attachments/assets/cf362370-78df-4af4-ab3f-1da9b7c0f3be)
+<img width="1187" height="562" alt="Screenshot 2025-11-05 151757" src="https://github.com/user-attachments/assets/4a281ecc-3d00-437b-b97a-f3ec0723eaaf" />
+
+
 
 
 
