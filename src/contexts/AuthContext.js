@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isLoggingOutRef = useRef(false); // Use ref so auth listener can see current value
 
   const redirectUri = AuthSession.makeRedirectUri({
     scheme: 'nourishnet',
@@ -51,68 +52,34 @@ export const AuthProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    // On web, always clear any persisted auth on app start to force login screen
     let isInitializing = true;
     
-    const preventAutoLogin = async () => {
-      if (typeof window !== 'undefined') {
-        try {
-          // Always sign out any existing session on web app start
-          // This ensures users always see onboarding/login, not auto-login
-          const currentUser = auth.currentUser;
-          if (currentUser) {
-            logger.log('Found persisted user on web, signing out to force login');
-            await signOut(auth);
-            // Wait a bit to ensure signOut completes
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-        } catch (error) {
-          logger.error('Error preventing auto-login:', error);
-        }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Ignore auth state changes if we're in the middle of logging out
+      if (isLoggingOutRef.current) {
+        logger.log('Ignoring auth state change during logout');
+        return;
       }
-    };
-
-    const initializeAuth = async () => {
-      // Sign out first (on web) before setting up listener to prevent auto-login
-      await preventAutoLogin();
       
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        // On web, ignore the first auth state change if it's null (after our sign-out)
-        if (isInitializing && typeof window !== 'undefined' && !firebaseUser) {
-          logger.log('Ignoring initial null auth state after web sign-out');
-          isInitializing = false;
-          setUser(null);
-          setUserProfile(null);
-          setLoading(false);
-          return;
-        }
-        
-        // Mark initialization complete after first change
-        if (isInitializing) {
-          isInitializing = false;
-        }
-        
-        if (firebaseUser) {
-          setUser(firebaseUser);
-          await loadUserProfile(firebaseUser.uid);
-          await registerForPushNotifications(firebaseUser.uid);
-        } else {
-          setUser(null);
-          setUserProfile(null);
-        }
-        setLoading(false);
-      });
-
-      return unsubscribe;
-    };
-
-    let unsubscribe;
-    initializeAuth().then((unsub) => {
-      unsubscribe = unsub;
+      if (isInitializing) {
+        isInitializing = false;
+      }
+      
+      if (firebaseUser) {
+        logger.log('Auth state changed: user logged in', firebaseUser.uid);
+        setUser(firebaseUser);
+        await loadUserProfile(firebaseUser.uid);
+        await registerForPushNotifications(firebaseUser.uid);
+      } else {
+        logger.log('Auth state changed: user logged out');
+        setUser(null);
+        setUserProfile(null);
+      }
+      setLoading(false);
     });
 
     return () => {
-      if (unsubscribe) unsubscribe();
+      unsubscribe();
     };
   }, []);
 
@@ -182,32 +149,87 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       setError(null);
-      // Sign out from Firebase first
-      await signOut(auth);
-      // Clear user state to trigger navigation change
+      logger.log('Logout initiated');
+      
+      // Set logout flag to prevent auth listener from interfering
+      isLoggingOutRef.current = true;
+      
+      // Clear state immediately to trigger navigation
       setUser(null);
       setUserProfile(null);
+      setLoading(true);
+      
+      // Sign out from Firebase
+      try {
+        await signOut(auth);
+        logger.log('Firebase signOut completed');
+      } catch (signOutError) {
+        logger.error('Error during signOut:', signOutError);
+        // Continue with logout even if signOut fails
+      }
+      
       // Clear any cached auth data
       try {
-        await AsyncStorage.removeItem('@nourishnet_user');
-        await AsyncStorage.removeItem('@nourishnet_profile');
+        await AsyncStorage.multiRemove([
+          '@nourishnet_user',
+          '@nourishnet_profile',
+          '@nourishnet_has_launched'
+        ]);
       } catch (storageError) {
         logger.warn('Error clearing storage on logout:', storageError);
       }
+      
+      // Ensure state is cleared
+      setUser(null);
+      setUserProfile(null);
+      setLoading(false);
+      
+      // Reset logout flag after a delay
+      setTimeout(() => {
+        isLoggingOutRef.current = false;
+      }, 2000);
+      
+      // On web, force reload for a complete logout
+      if (typeof window !== 'undefined') {
+        logger.log('Web logout: forcing page reload');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
+      }
+      
       logger.log('Logout successful');
       return { success: true };
     } catch (error) {
       logger.error('Logout error:', error);
       setError(error.message);
-      // Ensure state is cleared even if signOut fails
+      
+      // Ensure state is cleared even on error
       setUser(null);
       setUserProfile(null);
+      setLoading(false);
+      
       try {
-        await AsyncStorage.removeItem('@nourishnet_user');
-        await AsyncStorage.removeItem('@nourishnet_profile');
+        await AsyncStorage.multiRemove([
+          '@nourishnet_user',
+          '@nourishnet_profile',
+          '@nourishnet_has_launched'
+        ]);
       } catch (storageError) {
         logger.warn('Error clearing storage on logout:', storageError);
       }
+      
+      // Reset logout flag on error
+      setTimeout(() => {
+        isLoggingOutRef.current = false;
+      }, 2000);
+      
+      // On web, force reload even on error
+      if (typeof window !== 'undefined') {
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
+      }
+      
       return { success: false, error: error.message };
     }
   };

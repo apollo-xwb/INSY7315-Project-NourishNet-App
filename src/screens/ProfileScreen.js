@@ -170,22 +170,31 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = async () => {
+    // On web, use window.confirm for better compatibility
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const confirmed = window.confirm('Are you sure you want to logout?');
+      if (!confirmed) return;
+      
+      logger.log('Logout confirmed, calling logout function');
+      const result = await logout();
+      if (!result.success) {
+        showError(result.error || 'Failed to logout');
+      }
+      // On web, logout reloads the page
+      return;
+    }
+    
+    // Native: use Alert
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
+          logger.log('Logout confirmed, calling logout function');
           const result = await logout();
           if (result.success) {
             showSuccess('You have been logged out successfully!');
-            try {
-              const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-              // Optionally clear any app session keys (not auth tokens)
-              await AsyncStorage.removeItem('@nourishnet_has_launched');
-            } catch (_e) {}
-            // Logout will trigger navigation change automatically via AuthContext
-            // The AppNavigator will see !user and show Login screen
           } else {
             showError(result.error || 'Failed to logout');
           }
