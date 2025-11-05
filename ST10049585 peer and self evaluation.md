@@ -59,6 +59,35 @@ Technology Used: he used the Firebase emulator suite to handle the automated tes
 Presentation: Based on the firebase rules document, he also create a thorough security review document to hand to the client which was aimed at summarizing the access controls such as only the original donor being able to edit a donation, which was then presented to the clients IT Intern, James Korkie.
 
 Personal Strengths and Weaknesses Personal Strengths:
+The part of this WIL I understand that I need to improve my management plan with him because he shows me plan to work on the mobile app after that I work on well in this part of course I did not yet understand the firebase like he did so badly the coding. Some times I make mistake in the code when it is not working and we improviite together. The most efficient way to debug when errors or conflicts prevented progress, like errors in the firestore permissions or the image retry logic or when designing the system architecture in a broader sense. Perfecting this skill allowed us as a team to really take charge of challenges like the offline queueing functionality in an efficient manner.
+
+Security and Quality: When brainstorming with my team, he took initiative when it came to the firestore security rules and handling the integration and unit testing, where he made sure that the app stood on a secure and robust foundation. Displaying these security measures to the relevant stakeholder impressed them in terms of how much detail goes into preventing certain unwanted actions.
+
+Client Communication: he effectively managed client expectations, translating technical project status and risks into clear, non-technical language during check-ins.
+
+The expectations of the client were managed very efficiently with the technical project risks and status being translated into concise, clear and non-technical language throughout our checkins.
+
+Self-Directed Learning: he quickly mastered React Native and the required Firebase services without formal training, allowing me to contribute significantly from Sprint 1.
+
+he was able to rapidly master the React Native library with the help of my team without much guidance as figuring things out along the way and discovering what makes them break is the flow state where I learnt the most about the library and its capabilities cross-platform.
+
+Documentation: Of course he documented all project documentation alongside my team, specifically the technical manual and user manual with POE documentation to bring the project together. Personal Weaknesses (Areas for Improvement)
+
+UI/UX Design and Visual Polish: I’m the best when it comes to aesthetics and having a good eye for design was a trait. The user flow aspects like styling responsively and the consistency of the design was where I can help Tshwanelo with the expertise of the UI/UX.
+
+Improvement: Dedicate time to improving modern UI/UX principles and their integrations in design systems to bridge this knowledge gap.
+He occasionally took on complex technical tasks that could have been delegated, to ensure quality and speed. This limited Lidvin's exposure to some backend systems.
+For my delegation in the part of team I try my best with some basics I learn from the past few years with a lot of people who explain me what to do with code I do not understand without see what do they code mean to me before explaining what to do.
+
+For my improvement I have to get more experience for what to do with my knowloedge from coding or design even learning how to get a map in the first coding. For the message I have to say for message "DO NOT GIVE UP IF IT IS VERY DIFFICULT".
+
+Stakeholder Relationship
+
+
+Relationship with WIL Coordinator
+
+
+Conclusion
 
 
 References:
@@ -72,6 +101,7 @@ Google (2025) Firebase Documentation. Available at: https://firebase.google.com/
 Google (2025) Cloud Firestore. Available at: https://firebase.google.com/docs/firestore (Accessed: 1 November 2025).
 
 ![Screenshot 2025-11-05 151757](https://github.com/user-attachments/assets/cf362370-78df-4af4-ab3f-1da9b7c0f3be)
+
 
 
 
