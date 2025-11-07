@@ -27,11 +27,10 @@ Using GitHub actions, he established a CI/CD pipeline to automate the quality ch
 Quality Assurance & DevOps:
 Of course he made sure to follow professional Git branching strategies like feature branches, code reviews and pull requests to efficiently collaborate with my team whilst using a shared codebase.
 
-
 Version Control:
 he made sure to follow professional Git branching strategies like feature branches, code reviews and pull requests to efficiently collaborate with my team whilst using a shared codebase.
 
-Interpersonal & Management Skills Client Communication: he led weekly check-ins, translating technical concepts into accessible language for non-technical stakeholders (U-Turn Operations). he was expected to present feature demos and effectively gather and incorporate client feedback. Conflict Resolution: he facilitated discussions on contentious topics, such as the multi-claim vs. first-come-first-serve policy, ensuring the final decision balanced technical feasibility with client operational needs. Time Management & Prioritization: he managed parallel tasks across development, testing, and documentation, ensuring features were delivered on time for sprint deadlines despite unexpected technical blockers (e.g., web map integration).
+Interpersonal & Management Skills Client Communication: he led weekly check-ins, translating technical concepts into accessible language for non-technical stakeholders (U-Turn Operations). He was expected to present feature demos and effectively gather and incorporate client feedback. Conflict Resolution: he facilitated discussions on contentious topics, such as the multi-claim vs. first-come-first-serve policy, ensuring the final decision balanced technical feasibility with client operational needs. Time Management & Prioritization: he managed parallel tasks across development, testing, and documentation, ensuring features were delivered on time for sprint deadlines despite unexpected technical blockers (e.g., web map integration).
 
 Role in the team:
 
@@ -112,6 +111,7 @@ Google (2025) Firebase Documentation. Available at: https://firebase.google.com/
 Google (2025) Cloud Firestore. Available at: https://firebase.google.com/docs/firestore (Accessed: 1 November 2025).
 
 <img width="1187" height="562" alt="Screenshot 2025-11-05 151757" src="https://github.com/user-attachments/assets/4a281ecc-3d00-437b-b97a-f3ec0723eaaf" />
+
 
 
 
