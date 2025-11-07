@@ -19,21 +19,21 @@ export default function App() {
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       const style = document.createElement('style');
       style.textContent = `
-        /* Prevent double-tap zoom on interactive elements only */
-        [data-testid], [role="button"], button, a {
+        /* Prevent double-tap zoom on interactive elements */
+        [data-testid], [role="button"], [role="tab"], [role="link"], button, a, [tabindex]:not([tabindex="-1"]) {
           touch-action: manipulation;
           -webkit-tap-highlight-color: rgba(0,0,0,0);
         }
+        /* Prevent child icons/images from intercepting touches inside buttons */
+        [role="button"] svg, [role="button"] img { pointer-events: none; }
         /* Prevent text selection on buttons */
-        button, [role="button"] {
+        button, [role="button"], [role="tab"], [role="link"] {
           user-select: none;
           -webkit-user-select: none;
           -webkit-touch-callout: none;
         }
         /* Ensure React Native Web containers allow touch */
-        div[style*="flex"] {
-          touch-action: auto;
-        }
+        div[style*="flex"] { touch-action: auto; }
       `;
       document.head.appendChild(style);
       

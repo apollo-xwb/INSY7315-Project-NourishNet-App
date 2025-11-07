@@ -87,7 +87,7 @@ const MainTabNavigator = () => {
         options={{
           title: t('post'),
           tabBarIcon: ({ color, size }) => (
-            <View style={{
+            <View pointerEvents="box-none" style={{
               backgroundColor: theme.colors.primary,
               padding: 10,
               borderRadius: 28,
