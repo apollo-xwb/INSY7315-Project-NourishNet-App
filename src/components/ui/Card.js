@@ -75,14 +75,7 @@ const Card = ({ children, onPress, variant = 'elevated', elevation = 2, style, .
     style,
   ];
 
-  /**
-   * Conditional rendering: Interactive vs Static Card
-   * If onPress is provided, render as TouchableOpacity for interactivity
-   * Otherwise, render as static View
-   *
-   * UX Consideration: Interactive elements should be clearly distinguishable
-   * Reference: Nielsen Norman Group - Signifiers
-   */
+  // Render a touchable card when an onPress handler is provided
   if (onPress) {
     return (
       <TouchableOpacity style={cardStyle} onPress={onPress} activeOpacity={0.7} {...rest}>

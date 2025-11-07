@@ -47,18 +47,8 @@ const Toast = ({
 
   const variantStyle = getVariantStyle();
 
-  /**
-   * Animation: Slide and fade in
-   *
-   * Animation Strategy:
-   * - Parallel animations: both slide and fade simultaneously
-   * - Easing: ease-in-out for natural movement
-   * - Duration: 300ms (fast enough to not feel slow, slow enough to be smooth)
-   *
-   * Reference: "Animation in React Native" by Robin Heinze
-   */
+  // Animate toast entrance and schedule auto-dismiss
   useEffect(() => {
-    // Slide in and fade in
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -72,7 +62,6 @@ const Toast = ({
       }),
     ]).start();
 
-    // Auto-dismiss after duration
     const timeout = setTimeout(() => {
       handleDismiss();
     }, duration);
@@ -80,13 +69,7 @@ const Toast = ({
     return () => clearTimeout(timeout);
   }, []);
 
-  /**
-   * Handle dismiss animation
-   *
-   * Animation: Slide out and fade out
-   * - Smooth exit animation
-   * - Cleanup after animation completes
-   */
+  // Reverse the animation before removing the toast
   const handleDismiss = () => {
     Animated.parallel([
       Animated.timing(slideAnim, {

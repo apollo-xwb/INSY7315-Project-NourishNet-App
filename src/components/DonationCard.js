@@ -1,36 +1,10 @@
-/**
- * DonationCard
- *
- * Purpose: Visualizes a donation with image, status, location, optional
- * distance, and context actions (chat/claim/rate).
- */
-
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import Icon from '../utils/IconWrapper';
 import { Card, Badge, Button } from './ui';
 import { formatDistance } from '../utils/location';
 
-/**
- * DonationCard Component
- *
- * @param {Object} props - Component props
- * @param {Object} props.donation - Donation object
- * @param {Function} props.onPress - Handler when card is pressed
- * @param {string} props.variant - Card variant: 'default', 'compact', 'detailed'
- * @param {boolean} props.showDistance - Whether to show distance (requires userLocation)
- * @param {Object} props.userLocation - User's location for distance calculation
- * @param {boolean} props.showClaimButton - Whether to show claim button
- * @param {Function} props.onClaim - Handler for claim button
- * @param {boolean} props.showChatButton - Whether to show chat button
- * @param {Function} props.onChat - Handler for chat button
- * @param {boolean} props.showRatingButton - Whether to show rating button
- * @param {Function} props.onRate - Handler for rating button
- * @param {Object} props.style - Additional custom styles
- *
- * @returns {React.Component} Donation card component
- */
 const DonationCard = ({
   donation,
   onPress,
@@ -47,10 +21,6 @@ const DonationCard = ({
 }) => {
   const { theme } = useTheme();
 
-  /**
-   * Calculate distance if user location is provided
-   * Uses Haversine formula from location utils
-   */
   const getDistance = () => {
     if (!showDistance || !userLocation || !donation.location) {
       return null;
@@ -67,14 +37,6 @@ const DonationCard = ({
     return formatDistance(distance);
   };
 
-  /**
-   * Format time ago from timestamp
-   * Converts absolute time to relative time for better UX
-   *
-   * UX Pattern: Relative Time
-   * - "2 hours ago" is more intuitive than "14:32"
-   * - Reference: "Designing Interfaces" by Jenifer Tidwell
-   */
   const getTimeAgo = (date) => {
     if (!date) return '';
 
@@ -91,17 +53,6 @@ const DonationCard = ({
     return date.toDate ? date.toDate().toLocaleDateString() : new Date(date).toLocaleDateString();
   };
 
-  /**
-   * Get status badge variant based on donation status
-   * Visual coding: Different colors represent different states
-   *
-   * Color Psychology in UI:
-   * - Green (success): Available, positive
-   * - Orange (warning): Reserved, pending action
-   * - Red (error): Claimed, unavailable
-   *
-   * Reference: "The Principles of Beautiful Web Design" by Jason Beaird
-   */
   const getStatusVariant = () => {
     const statusMap = {
       available: 'success',
@@ -112,14 +63,6 @@ const DonationCard = ({
     return statusMap[donation.status] || 'default';
   };
 
-  /**
-   * Get the primary image from donation
-   * Handles both single image (legacy) and multiple images (new)
-   *
-   * Backward Compatibility Pattern:
-   * - Supports old data structure (image string)
-   * - Supports new data structure (images array)
-   */
   const getPrimaryImage = () => {
     if (donation.images && donation.images.length > 0) {
       return donation.images[0];
@@ -133,10 +76,6 @@ const DonationCard = ({
   const distance = getDistance();
   const primaryImage = getPrimaryImage();
 
-  /**
-   * Render compact variant
-   * Used in lists where space is limited
-   */
   if (variant === 'compact') {
     return (
       <Card onPress={onPress} style={[styles.compactCard, style]}>
@@ -165,24 +104,17 @@ const DonationCard = ({
     );
   }
 
-  /**
-   * Render default/detailed variant
-   * Full card with all information and actions
-   */
   return (
     <Card onPress={onPress} variant="elevated" elevation={2} style={[styles.card, style]}>
-      {/* Donation Image */}
       {primaryImage && (
         <View style={styles.imageContainer}>
           <Image source={{ uri: primaryImage }} style={styles.image} resizeMode="cover" />
-          {/* Multiple images indicator */}
           {donation.images && donation.images.length > 1 && (
             <View style={[styles.imageCountBadge, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
               <Icon name="photo-library" size={16} color="#FFF" />
               <Text style={styles.imageCountText}>{donation.images.length}</Text>
             </View>
           )}
-          {/* Status badge overlay */}
           <View style={styles.statusBadgeContainer}>
             <Badge variant={getStatusVariant()} size="small">
               {donation.status || 'available'}
@@ -191,9 +123,7 @@ const DonationCard = ({
         </View>
       )}
 
-      {/* Donation Information */}
       <View style={styles.content}>
-        {/* Title and Category */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={2}>
             {donation.itemName || donation.donationName || 'Unknown Item'}
@@ -205,7 +135,6 @@ const DonationCard = ({
           )}
         </View>
 
-        {/* Location */}
         <View style={styles.infoRow}>
           <Icon name="location-on" size={16} color={theme.colors.textSecondary} />
           <Text style={[styles.infoText, { color: theme.colors.textSecondary }]} numberOfLines={1}>
@@ -213,7 +142,6 @@ const DonationCard = ({
           </Text>
         </View>
 
-        {/* Distance (if available) */}
         {distance && (
           <View style={styles.infoRow}>
             <Icon name="near-me" size={16} color={theme.colors.primary} />
@@ -221,7 +149,6 @@ const DonationCard = ({
           </View>
         )}
 
-        {/* Time Posted */}
         {donation.createdAt && (
           <View style={styles.infoRow}>
             <Icon name="schedule" size={16} color={theme.colors.textSecondary} />
@@ -231,7 +158,6 @@ const DonationCard = ({
           </View>
         )}
 
-        {/* Description */}
         {donation.description && variant === 'detailed' && (
           <Text
             style={[styles.description, { color: theme.colors.textSecondary }]}
@@ -241,7 +167,6 @@ const DonationCard = ({
           </Text>
         )}
 
-        {/* Action Buttons */}
         {(showClaimButton || showChatButton || showRatingButton) && (
           <View style={styles.actions}>
             {showChatButton && onChat && (
@@ -293,10 +218,6 @@ const DonationCard = ({
   );
 };
 
-/**
- * StyleSheet for DonationCard
- * Follows Material Design card specifications
- */
 const styles = StyleSheet.create({
   card: {
     padding: 0,
