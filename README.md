@@ -2,6 +2,8 @@
 
 A cross-platform React Native application for connecting food donors with recipients in need, built for U-Turn Homeless Organisation. The app enables community members to post surplus food donations, claim donations, communicate via in-app chat, and build trust through ratings and reviews.
 
+MOBILE YOUTUBE DEMO: https://youtu.be/JZbtYO6oBRY
+
 ## Features
 
 - **Post Donations**: Share surplus food with images, descriptions, categories, and expiry dates
