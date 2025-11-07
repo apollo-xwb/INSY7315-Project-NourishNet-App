@@ -24,6 +24,22 @@ A cross-platform React Native application for connecting food donors with recipi
 - **Navigation**: React Navigation
 - **Internationalization**: react-i18next
 
+## Employee/Admin Access
+
+The application includes an employee/admin dashboard for managing the platform. To access the admin dashboard:
+
+1. From the login screen, click on the "Employee access" link (located below the logo)
+2. Enter the following credentials:
+   - **Username**: `nourishnetadmin`
+   - **Password**: `Nouri$hNET`
+
+The admin dashboard provides access to:
+- Total donations, claims, and user statistics
+- Recent donation activity
+- System overview and metrics
+
+**Note**: Admin access is separate from regular user authentication and does not require a Firebase account.
+
 ## Prerequisites
 
 - Node.js 18+ (Node 20 recommended)
@@ -114,22 +130,6 @@ npx expo start --web
 - `npm test` - Run unit tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:rules` - Run Firestore rules tests (requires emulator)
-
-## Employee/Admin Access
-
-The application includes an employee/admin dashboard for managing the platform. To access the admin dashboard:
-
-1. From the login screen, click on the "Employee access" link (located below the logo)
-2. Enter the following credentials:
-   - **Username**: `nourishnetadmin`
-   - **Password**: `Nouri$hNET`
-
-The admin dashboard provides access to:
-- Total donations, claims, and user statistics
-- Recent donation activity
-- System overview and metrics
-
-**Note**: Admin access is separate from regular user authentication and does not require a Firebase account.
 
 ## Project Structure
 
